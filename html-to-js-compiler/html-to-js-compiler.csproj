@@ -9,6 +9,11 @@
     <RootNamespace>html_to_js_compiler</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src/**/*.cs"/>
+  </ItemGroup>
 
 </Project>
