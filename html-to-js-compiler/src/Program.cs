@@ -23,7 +23,7 @@ namespace HTMLToJS
 
     public class Option<T>
     {
-        private readonly T _value;
+        private readonly T? _value;
         private readonly bool _hasValue;
 
 
@@ -49,7 +49,7 @@ namespace HTMLToJS
         public bool HasValue => _hasValue;
 
 
-        public T Value
+        public T? Value
         {
             get
             {
@@ -64,7 +64,7 @@ namespace HTMLToJS
         }
 
 
-        public Option<TResult> Map<TResult>(Func<T, TResult> func)
+        public Option<TResult> Map<TResult>(Func<T?, TResult> func)
         {
             if (!_hasValue)
             {
@@ -118,6 +118,10 @@ namespace HTMLToJS
             if (CharPosition >= Source.Length) return Option<char>.None;
             return Option<char>.Some(Source[_charPosition]);
         }
+
+        public void Empty() {
+            _charPosition = Source.Length;
+        }
     }
 
     public class SearchState : ITokenizerState
@@ -134,19 +138,35 @@ namespace HTMLToJS
 
                 // This is normal text
                 if (current.Value != '<') {
-                    
+                    tokenizer.State = new TextState();
                     continue;
                 }
 
                 // This is the start of a closing tag
                 if (next.Value == '\\') {
-
+                    tokenizer.State = new ClosingTagState();
                     continue;
                 }
 
                 // This is the start of a tag
                 tokenizer.State = new TagState();
             }
+        }
+    }
+
+    public class TextState : ITokenizerState
+    {
+        public void Run(Tokenizer tokenizer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ClosingTagState : ITokenizerState
+    {
+        public void Run(Tokenizer tokenizer)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -165,7 +185,7 @@ namespace HTMLToJS
             // We have a tag name. Append its first char and search for the others
             tagName.Append(firstChar);
             var nextChar = tokenizer.Consume();
-            while (nextChar.HasValue && Char.IsAsciiLetter(nextChar.Value)) {
+            while (nextChar.HasValue && char.IsAsciiLetter(nextChar.Value)) {
                 tagName.Append(nextChar.Value);
                 nextChar = tokenizer.Consume();
             }
@@ -173,17 +193,43 @@ namespace HTMLToJS
             // If there is no input left we quit
             if (!nextChar.HasValue) return;
 
-            // We skip whitspaces until we find the next char
-            while (nextChar.HasValue && Char.IsWhiteSpace(nextChar.Value)) {
-                nextChar = tokenizer.Consume();
-            }
+            Token tag = new Token(TokenType.TAG, tagName.ToString());
 
-            // If the character closes the tag we return to Search State
-            if (nextChar.Value == '>') {
-                tokenizer.State = new SearchState();
-            }
+            // We start searching for the tag attributes
+            // We search until we hit a > or illegal characters (<)
+            while (nextChar.HasValue) {
+                if (nextChar.Value == '>') {
+                    tokenizer.Tokens.Add(tag);
+                    tokenizer.State = new SearchState();
+                }
 
-            // Otherwise we start searching for the tag attributes
+                // This is illegal. Empty the tokenizer and quit
+                if (nextChar.Value == '<') {
+                    tokenizer.Empty();
+                    break;
+                }
+
+                // We skip whitespaces
+                if (char.IsWhiteSpace(nextChar.Value)) {
+                    nextChar = tokenizer.Consume();
+                    continue;
+                }
+
+                // We try to consume attributes
+                tokenizer.State = new AttributesState(tag);
+            }
+        }
+    }
+
+    public class AttributesState : ITokenizerState
+    {
+        private Token _tag;
+        public AttributesState(Token tag) {
+            _tag = tag;
+        }
+        public void Run(Tokenizer tokenizer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

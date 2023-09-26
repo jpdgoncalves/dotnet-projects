@@ -4,8 +4,8 @@ namespace HTMLToJS
 {
     public enum TokenType
     {
-        START_ELEMENT,
-        END_ELEMENT,
+        TAG,
+        END_TAG,
         TEXT
     }
     
