@@ -219,8 +219,41 @@ namespace HTMLToJS
             }
 
             // Transition to a state where we search for attributes
+            tokenizer.State = new AttributesState(tag);
         }
     }
 
-    
+    public class AttributesState : ITokenizerState
+    {
+        private Token _tag;
+
+        public AttributesState(Token tag) {
+            _tag = tag;
+        }
+        public void Run(Tokenizer tokenizer)
+        {
+            var attrName = tokenizer.ConsumeAttrName();
+            tokenizer.ConsumeChar('=');
+            var attrValue = tokenizer.ConsumeAttrValue();
+            tokenizer.ConsumeWhitespaces();
+
+            while (attrName != null && tokenizer.CurrentChar != '>') {
+                if (attrValue != null) {
+                    _tag.Attributes.Add(attrName, attrValue);
+                } else {
+                    _tag.Attributes.Add(attrName, "");
+                }
+
+                attrName = tokenizer.ConsumeAttrName();
+                tokenizer.ConsumeChar('=');
+                attrValue = tokenizer.ConsumeAttrValue();
+                tokenizer.ConsumeWhitespaces();
+            }
+
+            if (tokenizer.CurrentChar == '>') {
+                tokenizer.Tokens.Add(_tag);
+                tokenizer.State = new SearchState();
+            }
+        }
+    }
 }
