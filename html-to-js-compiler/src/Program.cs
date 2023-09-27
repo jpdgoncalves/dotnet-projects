@@ -1,5 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace HTMLToJS
@@ -21,61 +23,6 @@ namespace HTMLToJS
         }
     }
 
-    public class Option<T>
-    {
-        private readonly T? _value;
-        private readonly bool _hasValue;
-
-
-        private Option()
-        {
-            _hasValue = false;
-        }
-
-
-        private Option(T value)
-        {
-            _value = value;
-            _hasValue = true;
-        }
-
-
-        public static Option<T> None => new Option<T>();
-
-
-        public static Option<T> Some(T value) => new Option<T>(value);
-
-
-        public bool HasValue => _hasValue;
-
-
-        public T? Value
-        {
-            get
-            {
-                if (!_hasValue)
-                {
-                    throw new InvalidOperationException("Option has no value.");
-                }
-
-
-                return _value;
-            }
-        }
-
-
-        public Option<TResult> Map<TResult>(Func<T?, TResult> func)
-        {
-            if (!_hasValue)
-            {
-                return Option<TResult>.None;
-            }
-
-
-            return Option<TResult>.Some(func(_value));
-        }
-    }
-
     public interface ITokenizerState
     {
         public void Run(Tokenizer tokenizer);
@@ -88,6 +35,14 @@ namespace HTMLToJS
 
         private int _charPosition = 0;
         public int CharPosition { get { return _charPosition; } }
+
+        public char? CurrentChar
+        {
+            get
+            {
+                return CharPosition < Source.Length ? Source[_charPosition] : null;
+            }
+        }
 
         public List<Token> Tokens;
 
@@ -108,18 +63,104 @@ namespace HTMLToJS
             }
         }
 
-        public Option<char> Consume()
+        public string? ConsumeText()
         {
-            if (CharPosition >= Source.Length) return Option<char>.None;
-            return Option<char>.Some(Source[_charPosition++]);
+            var start = _charPosition;
+
+            while (CurrentChar != null && CurrentChar != '<')
+            {
+                _charPosition += 1;
+            }
+
+            if (start >= Source.Length) return null;
+
+            var text = Source.Substring(start, _charPosition - start);
+            return text.Length > 0 ? text : null;
         }
 
-        public Option<char> Peek() {
-            if (CharPosition >= Source.Length) return Option<char>.None;
-            return Option<char>.Some(Source[_charPosition]);
+        public string? ConsumeAsciiLetterDigitString()
+        {
+            var start = _charPosition;
+            while (CurrentChar.HasValue && char.IsAsciiLetterOrDigit(CurrentChar.Value))
+            {
+                _charPosition++;
+            }
+
+            if (start >= Source.Length) return null;
+
+            var str = Source.Substring(start, _charPosition - start);
+            return str.Length > 0 ? str : null;
         }
 
-        public void Empty() {
+        public void ConsumeWhitespaces()
+        {
+            while (CurrentChar == ' ') _charPosition++;
+        }
+
+        public char? ConsumeChar(char expected)
+        {
+            var c = CurrentChar == expected ? CurrentChar : null;
+            _charPosition += c != null ? 1 : 0;
+            return c;
+        }
+
+        public string? ConsumeDelimitedText()
+        {
+            if (CurrentChar != '"' || CurrentChar != '\'') return null;
+            var delimiter = CurrentChar;
+            _charPosition++;
+            var start = _charPosition;
+
+            while (CurrentChar.HasValue && CurrentChar != delimiter && CurrentChar != '<')
+            {
+                _charPosition++;
+            }
+
+            if (start >= Source.Length) return null;
+
+            var text = Source.Substring(start, _charPosition - start);
+
+            if (CurrentChar != '<') _charPosition++;
+
+            return text;
+        }
+
+        public string? ConsumeTagName()
+        {
+            var start = _charPosition;
+            while (CurrentChar.HasValue && (char.IsAsciiLetterOrDigit(CurrentChar.Value) || CurrentChar == '-'))
+            {
+                _charPosition++;
+            }
+
+            if (start >= Source.Length) return null;
+
+            var tagName = Source.Substring(start, _charPosition - start);
+            return tagName.Length > 0 ? tagName : null;
+        }
+
+        public string? ConsumeAttrName()
+        {
+            var start = _charPosition;
+            while (CurrentChar.HasValue && char.IsAsciiLetter(CurrentChar.Value))
+            {
+                _charPosition++;
+            }
+
+            if (start >= Source.Length) return null;
+
+            var attrName = Source.Substring(start, _charPosition - start);
+            return attrName.Length > 0 ? attrName : null;
+        }
+
+        public string? ConsumeAttrValue()
+        {
+            if (!CurrentChar.HasValue) return null;
+            return char.IsAsciiLetterOrDigit(CurrentChar.Value) ? ConsumeAsciiLetterDigitString() : ConsumeDelimitedText();
+        }
+
+        public void Empty()
+        {
             _charPosition = Source.Length;
         }
     }
@@ -130,35 +171,22 @@ namespace HTMLToJS
         {
             while (tokenizer.CharPosition <= tokenizer.Source.Length)
             {
-                var current = tokenizer.Consume();
-                var next = tokenizer.Peek();
+                // For now ignore raw text in the uppermost level
+                var text = tokenizer.ConsumeText();
 
-                // No point in continuing. There is nothing left
-                if (!next.HasValue) return;
+                if (text != null) tokenizer.Tokens.Add(new Token(text));
 
-                // This is normal text
-                if (current.Value != '<') {
-                    tokenizer.State = new TextState();
-                    continue;
-                }
-
-                // This is the start of a closing tag
-                if (next.Value == '\\') {
+                var leftArrow = tokenizer.ConsumeChar('<');
+                var slash = tokenizer.ConsumeChar('/');
+                if (leftArrow.HasValue && slash.HasValue)
+                {
                     tokenizer.State = new ClosingTagState();
-                    continue;
                 }
-
-                // This is the start of a tag
-                tokenizer.State = new TagState();
+                else if (leftArrow.HasValue)
+                {
+                    tokenizer.State = new TagState();
+                }
             }
-        }
-    }
-
-    public class TextState : ITokenizerState
-    {
-        public void Run(Tokenizer tokenizer)
-        {
-            throw new NotImplementedException();
         }
     }
 
@@ -174,62 +202,25 @@ namespace HTMLToJS
     {
         public void Run(Tokenizer tokenizer)
         {
-            // We expect a sequence of at least one alphanumeric characters
-            // For the tag name.
-            StringBuilder tagName = new StringBuilder();
-            var firstChar = tokenizer.Consume();
-
-            // No tag name. We simply return.
-            if (!firstChar.HasValue || !Char.IsAsciiLetter(firstChar.Value)) return;
-
-            // We have a tag name. Append its first char and search for the others
-            tagName.Append(firstChar);
-            var nextChar = tokenizer.Consume();
-            while (nextChar.HasValue && char.IsAsciiLetter(nextChar.Value)) {
-                tagName.Append(nextChar.Value);
-                nextChar = tokenizer.Consume();
+            var tagName = tokenizer.ConsumeTagName();
+            if (tagName == null) {
+                tokenizer.Empty();
+                return;
             }
 
-            // If there is no input left we quit
-            if (!nextChar.HasValue) return;
+            Token tag = new Token(TokenType.TAG, tagName);
+            tokenizer.ConsumeWhitespaces();
+            tokenizer.ConsumeChar('/');
 
-            Token tag = new Token(TokenType.TAG, tagName.ToString());
-
-            // We start searching for the tag attributes
-            // We search until we hit a > or illegal characters (<)
-            while (nextChar.HasValue) {
-                if (nextChar.Value == '>') {
-                    tokenizer.Tokens.Add(tag);
-                    tokenizer.State = new SearchState();
-                }
-
-                // This is illegal. Empty the tokenizer and quit
-                if (nextChar.Value == '<') {
-                    tokenizer.Empty();
-                    break;
-                }
-
-                // We skip whitespaces
-                if (char.IsWhiteSpace(nextChar.Value)) {
-                    nextChar = tokenizer.Consume();
-                    continue;
-                }
-
-                // We try to consume attributes
-                tokenizer.State = new AttributesState(tag);
+            if (!tokenizer.CurrentChar.HasValue) return;
+            if (tokenizer.CurrentChar == '>') {
+                tokenizer.State = new SearchState();
+                return;
             }
+
+            // Transition to a state where we search for attributes
         }
     }
 
-    public class AttributesState : ITokenizerState
-    {
-        private Token _tag;
-        public AttributesState(Token tag) {
-            _tag = tag;
-        }
-        public void Run(Tokenizer tokenizer)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    
 }
