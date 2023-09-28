@@ -34,5 +34,10 @@ namespace HTMLToJS
             Name = "Text";
             Value = value;
         }
+
+        public override string ToString()
+        {
+            return $"Token {{Type={Type}, Name={Name}, Value={Value}}}";
+        }
     }
 }

@@ -1,9 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-
 namespace HTMLToJS
 {
 
@@ -11,7 +7,8 @@ namespace HTMLToJS
     {
         public static void Main(string[] args)
         {
-            string filename = "example.html";
+            Console.WriteLine(Directory.GetCurrentDirectory());
+            string filename = "..\\..\\..\\..\\example.html";
             string filecontent;
 
             using (var sr = new StreamReader(filename))
@@ -19,7 +16,11 @@ namespace HTMLToJS
                 filecontent = sr.ReadToEnd();
             }
 
+            var tokenizer = new Tokenizer(new SearchState(), filecontent);
 
+            foreach (var token in tokenizer.Tokens) {
+                Console.WriteLine(token);
+            }
         }
     }
 
@@ -106,7 +107,7 @@ namespace HTMLToJS
 
         public string? ConsumeDelimitedText()
         {
-            if (CurrentChar != '"' || CurrentChar != '\'') return null;
+            if (CurrentChar != '"' && CurrentChar != '\'') return null;
             var delimiter = CurrentChar;
             _charPosition++;
             var start = _charPosition;
@@ -169,23 +170,19 @@ namespace HTMLToJS
     {
         public void Run(Tokenizer tokenizer)
         {
-            while (tokenizer.CharPosition <= tokenizer.Source.Length)
+            var text = tokenizer.ConsumeText();
+
+            if (text != null) tokenizer.Tokens.Add(new Token(text));
+
+            var leftArrow = tokenizer.ConsumeChar('<');
+            var slash = tokenizer.ConsumeChar('/');
+            if (leftArrow.HasValue && slash.HasValue)
             {
-                // For now ignore raw text in the uppermost level
-                var text = tokenizer.ConsumeText();
-
-                if (text != null) tokenizer.Tokens.Add(new Token(text));
-
-                var leftArrow = tokenizer.ConsumeChar('<');
-                var slash = tokenizer.ConsumeChar('/');
-                if (leftArrow.HasValue && slash.HasValue)
-                {
-                    tokenizer.State = new ClosingTagState();
-                }
-                else if (leftArrow.HasValue)
-                {
-                    tokenizer.State = new TagState();
-                }
+                tokenizer.State = new ClosingTagState();
+            }
+            else if (leftArrow.HasValue)
+            {
+                tokenizer.State = new TagState();
             }
         }
     }
@@ -194,7 +191,24 @@ namespace HTMLToJS
     {
         public void Run(Tokenizer tokenizer)
         {
-            throw new NotImplementedException();
+            var tagName = tokenizer.ConsumeTagName();
+
+            if (tagName == null)
+            {
+                tokenizer.Empty();
+                return;
+            }
+
+            tokenizer.ConsumeWhitespaces();
+
+            if (tokenizer.ConsumeChar('>') == null)
+            {
+                tokenizer.Empty();
+                return;
+            }
+
+            tokenizer.Tokens.Add(new Token(TokenType.END_TAG, tagName));
+            tokenizer.State = new SearchState();
         }
     }
 
@@ -203,7 +217,8 @@ namespace HTMLToJS
         public void Run(Tokenizer tokenizer)
         {
             var tagName = tokenizer.ConsumeTagName();
-            if (tagName == null) {
+            if (tagName == null)
+            {
                 tokenizer.Empty();
                 return;
             }
@@ -211,9 +226,12 @@ namespace HTMLToJS
             Token tag = new Token(TokenType.TAG, tagName);
             tokenizer.ConsumeWhitespaces();
             tokenizer.ConsumeChar('/');
-
             if (!tokenizer.CurrentChar.HasValue) return;
-            if (tokenizer.CurrentChar == '>') {
+
+            var rightArrow = tokenizer.ConsumeChar('>');
+            if (rightArrow.HasValue)
+            {
+                tokenizer.Tokens.Add(tag);
                 tokenizer.State = new SearchState();
                 return;
             }
@@ -227,7 +245,8 @@ namespace HTMLToJS
     {
         private Token _tag;
 
-        public AttributesState(Token tag) {
+        public AttributesState(Token tag)
+        {
             _tag = tag;
         }
         public void Run(Tokenizer tokenizer)
@@ -237,10 +256,14 @@ namespace HTMLToJS
             var attrValue = tokenizer.ConsumeAttrValue();
             tokenizer.ConsumeWhitespaces();
 
-            while (attrName != null && tokenizer.CurrentChar != '>') {
-                if (attrValue != null) {
+            while (attrName != null && tokenizer.CurrentChar != '>')
+            {
+                if (attrValue != null)
+                {
                     _tag.Attributes.Add(attrName, attrValue);
-                } else {
+                }
+                else
+                {
                     _tag.Attributes.Add(attrName, "");
                 }
 
@@ -250,7 +273,8 @@ namespace HTMLToJS
                 tokenizer.ConsumeWhitespaces();
             }
 
-            if (tokenizer.CurrentChar == '>') {
+            if (tokenizer.CurrentChar == '>')
+            {
                 tokenizer.Tokens.Add(_tag);
                 tokenizer.State = new SearchState();
             }
