@@ -16,7 +16,7 @@ namespace HTMLToJS
                 filecontent = sr.ReadToEnd();
             }
 
-            var tokenizer = new Tokenizer(new SearchState(), filecontent);
+            var tokenizer = new TokenizerDeprecated(new SearchState(), filecontent);
 
             foreach (var token in tokenizer.Tokens) {
                 Console.WriteLine(token);
@@ -24,14 +24,14 @@ namespace HTMLToJS
         }
     }
 
-    public interface ITokenizerState
+    public interface ITokenizerStateDeprecated
     {
-        public void Run(Tokenizer tokenizer);
+        public void Run(TokenizerDeprecated tokenizer);
     }
 
-    public class Tokenizer
+    public class TokenizerDeprecated
     {
-        public ITokenizerState State { get; set; }
+        public ITokenizerStateDeprecated State { get; set; }
         public string Source { get; }
 
         private int _charPosition = 0;
@@ -47,7 +47,7 @@ namespace HTMLToJS
 
         public List<Token> Tokens;
 
-        public Tokenizer(ITokenizerState startingState, string source)
+        public TokenizerDeprecated(ITokenizerStateDeprecated startingState, string source)
         {
             Source = source;
             _charPosition = 0;
@@ -166,9 +166,9 @@ namespace HTMLToJS
         }
     }
 
-    public class SearchState : ITokenizerState
+    public class SearchState : ITokenizerStateDeprecated
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(TokenizerDeprecated tokenizer)
         {
             var text = tokenizer.ConsumeText();
 
@@ -187,9 +187,9 @@ namespace HTMLToJS
         }
     }
 
-    public class ClosingTagState : ITokenizerState
+    public class ClosingTagState : ITokenizerStateDeprecated
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(TokenizerDeprecated tokenizer)
         {
             var tagName = tokenizer.ConsumeTagName();
 
@@ -212,9 +212,9 @@ namespace HTMLToJS
         }
     }
 
-    public class TagState : ITokenizerState
+    public class TagState : ITokenizerStateDeprecated
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(TokenizerDeprecated tokenizer)
         {
             var tagName = tokenizer.ConsumeTagName();
             if (tagName == null)
@@ -241,7 +241,7 @@ namespace HTMLToJS
         }
     }
 
-    public class AttributesState : ITokenizerState
+    public class AttributesState : ITokenizerStateDeprecated
     {
         private Token _tag;
 
@@ -249,7 +249,7 @@ namespace HTMLToJS
         {
             _tag = tag;
         }
-        public void Run(Tokenizer tokenizer)
+        public void Run(TokenizerDeprecated tokenizer)
         {
             var attrName = tokenizer.ConsumeAttrName();
             tokenizer.ConsumeChar('=');
