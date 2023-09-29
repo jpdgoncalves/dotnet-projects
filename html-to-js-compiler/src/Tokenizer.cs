@@ -78,7 +78,7 @@ namespace HTMLToJS
     {
         public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var tagName = reader.GetASCIILetterNumberSequenceWith('-');
+            var tagName = reader.GetASCIILetterDigitSequenceWith('-');
 
             reader.ConsumeWhitespaces();
             reader.GetChar('>');
@@ -92,7 +92,7 @@ namespace HTMLToJS
     {
         public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var tagName = reader.GetASCIILetterNumberSequenceWith('-');
+            var tagName = reader.GetASCIILetterDigitSequenceWith('-');
 
             Token tag = new Token(TokenType.TAG, tagName);
             tokenizer.Tokens.Add(tag);
@@ -121,7 +121,7 @@ namespace HTMLToJS
         public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
             reader.ConsumeWhitespaces();
-            var attrName = reader.GetASCIILetterSequence();
+            var attrName = reader.GetASCIILetterSequenceWith('-');
             var hasValue = reader.ConsumeChar('=');
 
             if (!hasValue) {
@@ -138,7 +138,7 @@ namespace HTMLToJS
             if (isDelimitedStr)
             {
                 var delimiter = reader.Source[reader.Cursor - 1];
-                attrValue = reader.GetUntil(delimiter);
+                attrValue = reader.GetUntil(delimiter, emptyException: false);
                 reader.GetChar(delimiter);
             }
             else

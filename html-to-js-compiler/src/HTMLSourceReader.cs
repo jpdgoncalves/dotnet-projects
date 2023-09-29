@@ -215,11 +215,25 @@ namespace HTMLToJS
             return _source.Substring(start, _cursor - start);
         }
 
-        public string GetASCIILetterNumberSequenceWith(char symbol, bool emptyException = true) {
+        public string GetASCIILetterDigitSequenceWith(char symbol, bool emptyException = true) {
             if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             var start = _cursor;
 
             while (!ReachedEnd && (char.IsAsciiLetterOrDigit(CurrentChar) || CurrentChar == symbol))
+            {
+                _cursor++;
+            }
+
+            if (start == _cursor && emptyException) throw new InvalidOperationException($"No input was read");
+
+            return _source.Substring(start, _cursor - start);
+        }
+
+        public string GetASCIILetterSequenceWith(char symbol, bool emptyException = true) {
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
+            var start = _cursor;
+
+            while (!ReachedEnd && (char.IsAsciiLetter(CurrentChar) || CurrentChar == symbol))
             {
                 _cursor++;
             }
