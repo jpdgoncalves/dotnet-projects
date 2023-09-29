@@ -37,7 +37,9 @@ namespace HTMLToJS
 
         public override string ToString()
         {
-            return $"Token {{Type={Type}, Name={Name}, Value={Value}}}";
+            var attrArr = Attributes.Select(kpv => kpv.Key + ": " + kpv.Value);
+            var attrStr = string.Join(',', attrArr);
+            return $"Token {{Type={Type}, Name={Name}, Value={Value}, Attributes={attrStr}}}";
         }
     }
 }

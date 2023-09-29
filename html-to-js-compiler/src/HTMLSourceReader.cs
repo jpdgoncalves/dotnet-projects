@@ -72,7 +72,9 @@ namespace HTMLToJS
         /// <returns>True if successful and false otherwise.</returns>
         public bool ConsumeChar(char symbol)
         {
-            return !ReachedEnd && _source[_cursor++] == symbol;
+            var success = !ReachedEnd && _source[_cursor] == symbol;
+            _cursor += success ? 1 : 0;
+            return success;
         }
 
         public char GetChar(char symbol)

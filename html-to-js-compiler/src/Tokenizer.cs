@@ -101,7 +101,6 @@ namespace HTMLToJS
             var tagEnded = reader.ConsumeChar('>');
 
             if (tagEnded) {
-                tokenizer.Tokens.Add(tag);
                 tokenizer.State = new TextState();
                 return;
             }
@@ -127,6 +126,8 @@ namespace HTMLToJS
 
             if (!hasValue) {
                 _tag.Attributes.Add(attrName, "");
+                reader.ConsumeWhitespaces();
+                if (reader.ConsumeChar('>')) tokenizer.State = new TextState();
                 return;
             }
 
@@ -147,8 +148,9 @@ namespace HTMLToJS
             _tag.Attributes.Add(attrName, attrValue);
 
             reader.ConsumeWhitespaces();
+            var tagEnded = reader.ConsumeChar('>');
 
-            if (reader.Source[reader.Cursor] == '>') {
+            if (tagEnded) {
                 tokenizer.State = new TextState();
             }
         }

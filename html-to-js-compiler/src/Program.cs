@@ -7,7 +7,6 @@ namespace HTMLToJS
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine(Directory.GetCurrentDirectory());
             string filename = "..\\..\\..\\..\\example.html";
             string filecontent;
 
