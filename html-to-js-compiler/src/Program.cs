@@ -18,8 +18,12 @@ namespace HTMLToJS
 
             var tokenizer = new Tokenizer(filecontent);
 
-            foreach (var token in tokenizer.Tokens) {
-                Console.WriteLine(token);
+            if (tokenizer.WasSucessful)
+            {
+                foreach (var token in tokenizer.Tokens)
+                {
+                    Console.WriteLine(token);
+                }
             }
         }
     }
