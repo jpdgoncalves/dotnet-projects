@@ -16,4 +16,9 @@
     <Compile Include="src/**/*.cs"/>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <None Update="*.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+
 </Project>
