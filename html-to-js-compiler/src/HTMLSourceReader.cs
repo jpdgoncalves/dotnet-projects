@@ -9,6 +9,8 @@ namespace HTMLToJS
     /// a bool on whether they were sucessful or not.
     /// Methods that start with "Get" are guaranteed
     /// to either return a result or throw an exception.
+    /// Both methods only update the cursor if they
+    /// are sucessful.
     /// </summary>
     public class HTMLSourceReader
     {
@@ -55,6 +57,19 @@ namespace HTMLToJS
             _cursor = _cursor >= _source.Length ? _source.Length : _cursor;
         }
 
+        /// <summary>
+        /// Consumes the remaining of the source reader.
+        /// Used in error situations.
+        /// </summary>
+        public void ConsumeAll() {
+            _cursor = _source.Length;
+        }
+
+        /// <summary>
+        /// Tries to consume the symbol from the source.
+        /// </summary>
+        /// <param name="symbol">The character to consume.</param>
+        /// <returns>True if successful and false otherwise.</returns>
         public bool ConsumeChar(char symbol)
         {
             return !ReachedEnd && _source[_cursor++] == symbol;
@@ -62,7 +77,7 @@ namespace HTMLToJS
 
         public char GetChar(char symbol)
         {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             if (_source[_cursor++] != symbol) throw new InvalidOperationException($"No '{symbol}' at the current position was found");
             return symbol;
         }
@@ -83,7 +98,7 @@ namespace HTMLToJS
 
         public char GetOneOf(params char[] symbols)
         {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             foreach (var symbol in symbols)
             {
                 if (CurrentChar == symbol)
@@ -121,6 +136,17 @@ namespace HTMLToJS
             return start != _cursor;
         }
 
+        /// <summary>
+        /// Consumes the source until the symbol
+        /// is found.
+        /// </summary>
+        /// <param name="symbol">
+        /// The character to stop consuming at.
+        /// </param>
+        /// <returns>
+        /// If it was able to consume any character from the source
+        /// returns true. Returns false if otherwise.
+        /// </returns>
         public bool ConsumeUntil(char symbol)
         {
             if (ReachedEnd) return false;
@@ -133,10 +159,20 @@ namespace HTMLToJS
 
             return start != _cursor;
         }
-
-        public string GetUntil(char symbol)
+        
+        /// <summary>
+        /// Consumes input until the symbol is found in the source
+        /// and returns the result.
+        /// </summary>
+        /// <param name="symbol">The stop character</param>
+        /// <returns>
+        /// The consumed source between (inclusive) the current position of the cursor
+        /// to the position where the symbol was found (exclusive).
+        /// </returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public string GetUntil(char symbol, bool emptyException = true)
         {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             var start = _cursor;
 
             while (!ReachedEnd && CurrentChar != symbol)
@@ -144,11 +180,13 @@ namespace HTMLToJS
                 _cursor++;
             }
 
+            if (start == _cursor && emptyException) throw new InvalidOperationException($"No input was read");
+
             return _source.Substring(start, _cursor - start);
         }
 
-        public string GetASCIILetterDigitSequence() {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+        public string GetASCIILetterDigitSequence(bool emptyException = true) {
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             var start = _cursor;
 
             while (!ReachedEnd && char.IsAsciiLetterOrDigit(CurrentChar))
@@ -156,11 +194,13 @@ namespace HTMLToJS
                 _cursor++;
             }
 
+            if (start == _cursor && emptyException) throw new InvalidOperationException($"No input was read");
+
             return _source.Substring(start, _cursor - start);
         }
 
-        public string GetASCIILetterSequence() {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+        public string GetASCIILetterSequence(bool emptyException = true) {
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             var start = _cursor;
 
             while (!ReachedEnd && char.IsAsciiLetter(CurrentChar))
@@ -168,17 +208,21 @@ namespace HTMLToJS
                 _cursor++;
             }
 
+            if (start == _cursor && emptyException) throw new InvalidOperationException($"No input was read");
+
             return _source.Substring(start, _cursor - start);
         }
 
-        public string GetASCIILetterSequenceWith(char symbol) {
-            if (ReachedEnd) throw new IndexOutOfRangeException($"Reader has reached its end");
+        public string GetASCIILetterNumberSequenceWith(char symbol, bool emptyException = true) {
+            if (ReachedEnd) throw new InvalidOperationException($"Reader has reached its end");
             var start = _cursor;
 
             while (!ReachedEnd && (char.IsAsciiLetterOrDigit(CurrentChar) || CurrentChar == symbol))
             {
                 _cursor++;
             }
+
+            if (start == _cursor && emptyException) throw new InvalidOperationException($"No input was read");
 
             return _source.Substring(start, _cursor - start);
         }
