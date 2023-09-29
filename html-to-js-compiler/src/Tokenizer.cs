@@ -3,38 +3,34 @@ namespace HTMLToJS
 {
     public interface ITokenizer
     {
-        public void Run(Tokenizer tokenizer);
+        public void Run(Tokenizer tokenizer, HTMLSourceReader reader);
     }
 
     public class Tokenizer
     {
         public ITokenizer State { get; set; }
-        public string Source { get; }
+
+        private HTMLSourceReader _reader;
+        private bool _wasSucessful = true;
+        public bool WasSucessful { get { return _wasSucessful; } }
 
         private int _charPosition = 0;
         public int CharPosition { get { return _charPosition; } }
-
-        public char? CurrentChar
-        {
-            get
-            {
-                return CharPosition < Source.Length ? Source[_charPosition] : null;
-            }
-        }
 
         public List<Token> Tokens;
 
         public Tokenizer(ITokenizer startingState, string source)
         {
-            Source = source;
+            _reader = new HTMLSourceReader(source);
             _charPosition = 0;
             State = startingState;
             Tokens = new List<Token>();
             Tokenize();
         }
 
-        public Tokenizer(string source) {
-            Source = source;
+        public Tokenizer(string source)
+        {
+            _reader = new HTMLSourceReader(source);
             _charPosition = 0;
             State = new TextState();
             Tokens = new List<Token>();
@@ -43,154 +39,49 @@ namespace HTMLToJS
 
         private void Tokenize()
         {
-            while (CharPosition <= Source.Length)
+            try
             {
-                State.Run(this);
+                while (!_reader.ReachedEnd)
+                {
+                    State.Run(this, _reader);
+                }
             }
-        }
-
-        public string? ConsumeText()
-        {
-            var start = _charPosition;
-
-            while (CurrentChar != null && CurrentChar != '<')
+            catch (Exception e)
             {
-                _charPosition += 1;
+                Console.Error.WriteLine(e);
+                _wasSucessful = false;
             }
-
-            if (start >= Source.Length) return null;
-
-            var text = Source.Substring(start, _charPosition - start);
-            return text.Length > 0 ? text : null;
-        }
-
-        public string? ConsumeAsciiLetterDigitString()
-        {
-            var start = _charPosition;
-            while (CurrentChar.HasValue && char.IsAsciiLetterOrDigit(CurrentChar.Value))
-            {
-                _charPosition++;
-            }
-
-            if (start >= Source.Length) return null;
-
-            var str = Source.Substring(start, _charPosition - start);
-            return str.Length > 0 ? str : null;
-        }
-
-        public void ConsumeWhitespaces()
-        {
-            while (CurrentChar == ' ') _charPosition++;
-        }
-
-        public char? ConsumeChar(char expected)
-        {
-            var c = CurrentChar == expected ? CurrentChar : null;
-            _charPosition += c != null ? 1 : 0;
-            return c;
-        }
-
-        public string? ConsumeDelimitedText()
-        {
-            if (CurrentChar != '"' && CurrentChar != '\'') return null;
-            var delimiter = CurrentChar;
-            _charPosition++;
-            var start = _charPosition;
-
-            while (CurrentChar.HasValue && CurrentChar != delimiter && CurrentChar != '<')
-            {
-                _charPosition++;
-            }
-
-            if (start >= Source.Length) return null;
-
-            var text = Source.Substring(start, _charPosition - start);
-
-            if (CurrentChar != '<') _charPosition++;
-
-            return text;
-        }
-
-        public string? ConsumeTagName()
-        {
-            var start = _charPosition;
-            while (CurrentChar.HasValue && (char.IsAsciiLetterOrDigit(CurrentChar.Value) || CurrentChar == '-'))
-            {
-                _charPosition++;
-            }
-
-            if (start >= Source.Length) return null;
-
-            var tagName = Source.Substring(start, _charPosition - start);
-            return tagName.Length > 0 ? tagName : null;
-        }
-
-        public string? ConsumeAttrName()
-        {
-            var start = _charPosition;
-            while (CurrentChar.HasValue && char.IsAsciiLetter(CurrentChar.Value))
-            {
-                _charPosition++;
-            }
-
-            if (start >= Source.Length) return null;
-
-            var attrName = Source.Substring(start, _charPosition - start);
-            return attrName.Length > 0 ? attrName : null;
-        }
-
-        public string? ConsumeAttrValue()
-        {
-            if (!CurrentChar.HasValue) return null;
-            return char.IsAsciiLetterOrDigit(CurrentChar.Value) ? ConsumeAsciiLetterDigitString() : ConsumeDelimitedText();
-        }
-
-        public void Empty()
-        {
-            _charPosition = Source.Length;
         }
     }
 
     public class TextState : ITokenizer
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var text = tokenizer.ConsumeText();
 
-            if (text != null) tokenizer.Tokens.Add(new Token(text));
+            var text = reader.GetUntil('<', emptyException: false);
+            tokenizer.Tokens.Add(new Token(text));
 
-            var leftArrow = tokenizer.ConsumeChar('<');
-            var slash = tokenizer.ConsumeChar('/');
-            if (leftArrow.HasValue && slash.HasValue)
+            reader.ConsumeChar('<');
+            var slash = reader.ConsumeChar('/');
+            if (slash)
             {
                 tokenizer.State = new ClosingTagState();
+                return;
             }
-            else if (leftArrow.HasValue)
-            {
-                tokenizer.State = new TagState();
-            }
+
+            tokenizer.State = new TagState();
         }
     }
 
     public class ClosingTagState : ITokenizer
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var tagName = tokenizer.ConsumeTagName();
+            var tagName = reader.GetASCIILetterNumberSequenceWith('-');
 
-            if (tagName == null)
-            {
-                tokenizer.Empty();
-                return;
-            }
-
-            tokenizer.ConsumeWhitespaces();
-
-            if (tokenizer.ConsumeChar('>') == null)
-            {
-                tokenizer.Empty();
-                return;
-            }
+            reader.ConsumeWhitespaces();
+            reader.GetChar('>');
 
             tokenizer.Tokens.Add(new Token(TokenType.END_TAG, tagName));
             tokenizer.State = new TextState();
@@ -199,68 +90,65 @@ namespace HTMLToJS
 
     public class TagState : ITokenizer
     {
-        public void Run(Tokenizer tokenizer)
+        public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var tagName = tokenizer.ConsumeTagName();
-            if (tagName == null)
-            {
-                tokenizer.Empty();
-                return;
-            }
+            var tagName = reader.GetASCIILetterNumberSequenceWith('-');
 
             Token tag = new Token(TokenType.TAG, tagName);
-            tokenizer.ConsumeWhitespaces();
-            tokenizer.ConsumeChar('/');
-            if (!tokenizer.CurrentChar.HasValue) return;
+            tokenizer.Tokens.Add(tag);
+            reader.ConsumeWhitespaces();
+            reader.ConsumeChar('/');
+            var tagEnded = reader.ConsumeChar('>');
 
-            var rightArrow = tokenizer.ConsumeChar('>');
-            if (rightArrow.HasValue)
-            {
+            if (tagEnded) {
                 tokenizer.Tokens.Add(tag);
                 tokenizer.State = new TextState();
                 return;
             }
 
             // Transition to a state where we search for attributes
-            tokenizer.State = new AttributesState(tag);
+            tokenizer.State = new AttributeState(tag);
         }
     }
 
-    public class AttributesState : ITokenizer
+    public class AttributeState : ITokenizer
     {
         private Token _tag;
 
-        public AttributesState(Token tag)
+        public AttributeState(Token tag)
         {
             _tag = tag;
         }
-        public void Run(Tokenizer tokenizer)
+        public void Run(Tokenizer tokenizer, HTMLSourceReader reader)
         {
-            var attrName = tokenizer.ConsumeAttrName();
-            tokenizer.ConsumeChar('=');
-            var attrValue = tokenizer.ConsumeAttrValue();
-            tokenizer.ConsumeWhitespaces();
+            reader.ConsumeWhitespaces();
+            var attrName = reader.GetASCIILetterSequence();
+            var hasValue = reader.ConsumeChar('=');
 
-            while (attrName != null && tokenizer.CurrentChar != '>')
-            {
-                if (attrValue != null)
-                {
-                    _tag.Attributes.Add(attrName, attrValue);
-                }
-                else
-                {
-                    _tag.Attributes.Add(attrName, "");
-                }
-
-                attrName = tokenizer.ConsumeAttrName();
-                tokenizer.ConsumeChar('=');
-                attrValue = tokenizer.ConsumeAttrValue();
-                tokenizer.ConsumeWhitespaces();
+            if (!hasValue) {
+                _tag.Attributes.Add(attrName, "");
+                return;
             }
 
-            if (tokenizer.CurrentChar == '>')
+            var isDelimitedStr = reader.ComsumeOneOf('"', '\'');
+
+            string? attrValue;
+            if (isDelimitedStr)
             {
-                tokenizer.Tokens.Add(_tag);
+                var delimiter = reader.Source[reader.Cursor - 1];
+                attrValue = reader.GetUntil(delimiter);
+                reader.GetChar(delimiter);
+            }
+            else
+            {
+                attrValue = reader.GetASCIILetterDigitSequence();
+            }
+
+            _tag.Attributes.Add(attrName, attrValue);
+
+            reader.ConsumeWhitespaces();
+
+            if (reader.Source[reader.Cursor] == '>') {
                 tokenizer.State = new TextState();
             }
         }
