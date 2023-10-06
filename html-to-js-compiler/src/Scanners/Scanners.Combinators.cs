@@ -45,7 +45,7 @@ namespace HTMLToJS {
                     if (!sucess) return (false, start);
                     lastOffset = offset;
                 }
-                return (false, lastOffset);
+                return (true, lastOffset);
             };
         }
     }
