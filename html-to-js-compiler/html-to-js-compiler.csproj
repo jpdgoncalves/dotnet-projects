@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <None Update="*.html" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="testfiles\*.html" CopyToOutputDirectory="PreserveNewest" LinkBase="config\s"/>
   </ItemGroup>
 
 
