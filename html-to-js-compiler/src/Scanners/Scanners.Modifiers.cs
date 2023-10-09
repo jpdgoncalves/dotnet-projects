@@ -2,11 +2,6 @@
 namespace HTMLToJS.Scanners {
     
     public static partial class Scanners {
-
-        public static ScanFunction Maybe(ScanCharFunction scanChar) {
-            return (source, start) => start < source.Length && scanChar(source[start]) ? (true, start + 1) : (false, start);
-        }
-
         /// <summary>
         /// Turns a scanFunction into one that
         /// is always successful.
@@ -24,10 +19,6 @@ namespace HTMLToJS.Scanners {
             };
         }
 
-        public static ScanFunction Not(ScanCharFunction scanChar) {
-            return (source, start) => start < source.Length && !scanChar(source[start]) ? (true, start + 1) : (false, start);
-        }
-
         /// <summary>
         /// Transforms a scanner into one that
         /// tries to not match the source string.
@@ -41,18 +32,6 @@ namespace HTMLToJS.Scanners {
             return (string source, int start) => {
                 var (sucess, offset) = scanner(source, start);
                 return sucess ? (false, start) : (true, start);
-            };
-        }
-
-        public static ScanFunction ZeroOrMore(ScanCharFunction scanChar) {
-            return (string source, int start) => {
-                var lastOffset = start;
-                while (lastOffset < source.Length) {
-                    var success = scanChar(source[lastOffset]);
-                    if (!success) break;
-                    lastOffset += 1;
-                }
-                return (true, lastOffset);
             };
         }
 
@@ -74,18 +53,6 @@ namespace HTMLToJS.Scanners {
                     lastOffset = offset;
                 }
                 return (true, lastOffset);
-            };
-        }
-
-        public static ScanFunction OneOrMore(ScanCharFunction scanChar) {
-            return (string source, int start) => {
-                var lastOffset = start;
-                while (lastOffset < source.Length) {
-                    var success = scanChar(source[lastOffset]);
-                    if (!success) break;
-                    lastOffset += 1;
-                }
-                return (lastOffset != start, lastOffset);
             };
         }
 

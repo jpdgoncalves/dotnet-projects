@@ -42,7 +42,7 @@ namespace HTMLToJS.Scanners {
                 var lastOffset = start;
                 foreach(var scanner in scanners) {
                     var (sucess, offset) = scanner(source, lastOffset);
-                    if (!sucess) return (false, start);
+                    if (!sucess) return (false, lastOffset);
                     lastOffset = offset;
                 }
                 return (true, lastOffset);

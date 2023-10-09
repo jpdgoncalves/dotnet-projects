@@ -1,24 +1,30 @@
 
+using HTMLToJS.Scanners;
+using static HTMLToJS.Scanners.Scanners;
+
 namespace HTMLToJS
 {
     public class HTMLParser {
 
-        private Scanners.ScanFunction parser;
+        private ScanFunction parser;
         private HTMLWalker walker = new HTMLWalker();
+        
         public HTMLParser() {
-            var tagNameChar = Scanners.Char(Scanners.OneOf(
-                Scanners.CharSet(
-                    Scanners.CharRange('a', 'z'),
-                    Scanners.CharRange('A', 'Z'),
-                    Scanners.CharRange('0', '9'),
-                    Scanners.CharList('-')
-                )
-            ));
-            var tagName = Scanners.OneOrMore(tagNameChar).SuccessCallback(walker.WalkTagName);
-            parser = Scanners.SequenceOf(
-                Scanners.Char('<'),
-                tagName,
-                Scanners.Char('>')
+            var singleQuoteChar = CharScanner.Of('\'');
+            var doubleQuoteChar = CharScanner.Of('"');
+
+            var tagNameChar = CharScanner.AsciiLettersDigits.And('-');
+            var attrNameChar = CharScanner.AsciiLettersDigits;
+            var attrValueChar = CharScanner.AsciiLettersDigits;
+
+            var whitespaces = CharScanner.AsciiWhitespaces;
+            var tagName = OneOrMore(tagNameChar);
+
+            parser = SequenceOf(
+                CharScanner.Of('<'),
+                tagName.WithSuccess(walker.WalkTagName),
+                ZeroOrMore(whitespaces),
+                CharScanner.Of('>')
             );
         }
 
