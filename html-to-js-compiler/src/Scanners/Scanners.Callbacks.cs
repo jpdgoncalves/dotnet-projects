@@ -1,12 +1,12 @@
 
-namespace HTMLToJS
+namespace HTMLToJS.Scanners
 {
 
     public static partial class Scanners
     {
         public delegate void ScanFunctionCallback(string source, int start, int offset);
 
-        public static ScanFunction SuccessCallback(this ScanFunction scanner, ScanFunctionCallback success)
+        public static ScanFunction WithSuccess(this ScanFunction scanner, ScanFunctionCallback success)
         {
             return (string source, int start) =>
             {
@@ -16,7 +16,7 @@ namespace HTMLToJS
             };
         }
 
-        public static ScanFunction FailureCallback(this ScanFunction scanner, ScanFunctionCallback failure)
+        public static ScanFunction WithFailure(this ScanFunction scanner, ScanFunctionCallback failure)
         {
             return (string source, int start) =>
             {
@@ -26,7 +26,7 @@ namespace HTMLToJS
             };
         }
 
-        public static ScanFunction Callbacks(this ScanFunction scanner, ScanFunctionCallback success, ScanFunctionCallback failure)
+        public static ScanFunction With(this ScanFunction scanner, ScanFunctionCallback success, ScanFunctionCallback failure)
         {
             return (string source, int start) =>
             {

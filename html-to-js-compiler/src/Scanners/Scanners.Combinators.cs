@@ -1,5 +1,5 @@
 
-namespace HTMLToJS {
+namespace HTMLToJS.Scanners {
 
     public static partial class Scanners {
 
