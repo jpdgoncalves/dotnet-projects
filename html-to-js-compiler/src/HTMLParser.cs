@@ -107,31 +107,35 @@ namespace HTMLToJS
             set
             {
                 _root = value;
+                _parent = value;
                 _current = value;
             }
         }
+        private HTMLNode _parent;
         private HTMLNode _current;
 
         private string _curAttrName = "";
 
         public HTMLWalker()
         {
+            _parent = _root;
             _current = _root;
         }
 
         public void WalkTag(string source, int start, int offset)
         {
             var tagName = source.Substring(start, offset - start);
-            var tag = HTMLNode.MakeTag(tagName, parent: _current);
-            _current.Children.Add(tag);
-            if (!_VoidElements.Contains(tagName)) _current = tag;
+            var tag = HTMLNode.MakeTag(tagName, parent: _parent);
+            _parent.Children.Add(tag);
+            _current = tag;
+            if (!_VoidElements.Contains(tagName)) _parent = tag;
         }
 
         public void WalkText(string source, int start, int offset)
         {
             var text = source.Substring(start, offset - start);
-            var tag = HTMLNode.MakeText(text, parent: _current);
-            _current.Children.Add(tag);
+            var tag = HTMLNode.MakeText(text, parent: _parent);
+            _parent.Children.Add(tag);
         }
 
         public void WalkAttrName(string source, int start, int offset)
@@ -149,8 +153,8 @@ namespace HTMLToJS
         public void WalkEndTag(string source, int start, int offset)
         {
             var tagName = source.Substring(start, offset - start);
-            var closestParent = _current.FindClosestAncestorByName(tagName);
-            _current = closestParent != null && closestParent.Parent != null ? closestParent.Parent : Root;
+            var closestParent = _parent.FindClosestAncestorByName(tagName);
+            _parent = closestParent != null && closestParent.Parent != null ? closestParent.Parent : Root;
         }
 
         public void WalkComment(string source, int start, int offset)
