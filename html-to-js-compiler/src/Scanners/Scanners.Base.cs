@@ -157,7 +157,9 @@ namespace HTMLToJS.Scanners
         public static ScanFunction Str(string pattern) {
             return (string source, int start) => {
                 var i = 0;
-
+                for (; i < pattern.Length && start + i < source.Length; i++) {
+                    if (pattern[i] != source[start + i]) return (false, start + i);
+                }
                 return (i == pattern.Length, start + i);
             };
         }
