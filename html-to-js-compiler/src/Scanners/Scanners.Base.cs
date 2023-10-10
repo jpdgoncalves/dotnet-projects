@@ -71,6 +71,21 @@ namespace HTMLToJS.Scanners
             return combined;
         }
 
+        public CharScanner And(params CharScanner[] others) {
+            var combined = new CharScanner();
+            combined._anyChar = _anyChar;
+            combined.Expect(_expected);
+            combined.Forbid(_forbidden);
+
+            foreach (var other in others) {
+                combined._anyChar |= other._anyChar;
+                combined.Expect(other._expected);
+                combined.Forbid(other._forbidden);
+            }
+            
+            return combined;
+        }
+
         public CharScanner Except(params char[] chars) => Except(chars.AsEnumerable());
 
         public CharScanner Except(params IEnumerable<char>[] charSets)
@@ -80,6 +95,21 @@ namespace HTMLToJS.Scanners
             combined.Expect(_expected);
             combined.Forbid(_forbidden);
             foreach (var set in charSets) combined.Forbid(set);
+            return combined;
+        }
+
+        public CharScanner Except(params CharScanner[] others) {
+            var combined = new CharScanner();
+            combined._anyChar = _anyChar;
+            combined.Expect(_expected);
+            combined.Forbid(_forbidden);
+
+            foreach (var other in others) {
+                combined._anyChar |= other._anyChar;
+                combined.Expect(other._forbidden);
+                combined.Forbid(other._expected);
+            }
+            
             return combined;
         }
 
@@ -97,6 +127,7 @@ namespace HTMLToJS.Scanners
         public static CharScanner NotOf(params IEnumerable<char>[] charSets)
         {
             CharScanner scanner = new();
+            scanner._anyChar = true;
             foreach (var set in charSets) scanner.Forbid(set);
             return scanner;
         }
