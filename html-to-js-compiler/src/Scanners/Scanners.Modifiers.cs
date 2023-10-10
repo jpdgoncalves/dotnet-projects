@@ -31,7 +31,7 @@ namespace HTMLToJS.Scanners {
         public static ScanFunction Not(ScanFunction scanner) {
             return (string source, int start) => {
                 var (sucess, offset) = scanner(source, start);
-                return sucess ? (false, start) : (true, start);
+                return sucess ? (false, offset) : (true, start);
             };
         }
 
