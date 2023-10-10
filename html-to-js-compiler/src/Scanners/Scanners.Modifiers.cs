@@ -76,5 +76,12 @@ namespace HTMLToJS.Scanners {
                 return (lastOffset != start, lastOffset);
             };
         }
+
+        public static ScanFunction DoNotConsume(this ScanFunction scanner) {
+            return (string source, int start) => {
+                var result = scanner(source, start);
+                return (result.success, start);
+            };
+        }
     }
 }
