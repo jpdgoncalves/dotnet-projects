@@ -7,7 +7,7 @@ namespace HTMLToJS
     {
         public static void Main(string[] args)
         {
-            string filename = "testfiles/example.html";
+            string filename = "testfiles/example2.html";
             string filecontent;
 
             using (var sr = new StreamReader(filename))
@@ -16,7 +16,8 @@ namespace HTMLToJS
             }
 
             var parser = new HTMLParser();
-            parser.Parse(filecontent);
+            var root = parser.Parse(filecontent);
+            Console.WriteLine(root);
         }
     }
 }
