@@ -12,20 +12,73 @@ namespace HTMLToJS
         public HTMLParser() {
             var singleQuoteChar = CharScanner.Of('\'');
             var doubleQuoteChar = CharScanner.Of('"');
+            var anyChar = CharScanner.Any;
 
             var tagNameChar = CharScanner.AsciiLettersDigits.And('-');
-            var attrNameChar = CharScanner.AsciiLettersDigits;
+            var attrNameChar = CharScanner.AsciiLettersDigits.And('-');
             var attrValueChar = CharScanner.AsciiLettersDigits;
+            var whitespaceChar = CharScanner.AsciiWhitespaces;
 
-            var whitespaces = CharScanner.AsciiWhitespaces;
+            var attrValueUnquoted = OneOrMore(attrValueChar).WithSuccess(walker.WalkAttrValue);
+            var attrValueSingeQuote = Sequence(
+                singleQuoteChar,
+                ZeroOrMore(anyChar.Except(singleQuoteChar)).WithSuccess(walker.WalkAttrValue),
+                singleQuoteChar
+            );
+            var attrValueDoubleQuote = Sequence(
+                doubleQuoteChar,
+                ZeroOrMore(anyChar.Except(doubleQuoteChar)).WithSuccess(walker.WalkAttrValue),
+                doubleQuoteChar
+            );
+            
             var tagName = OneOrMore(tagNameChar);
+            var attrName = OneOrMore(attrNameChar).WithSuccess(walker.WalkAttrName);
+            var attrValue = FirstOf(
+                attrValueUnquoted,
+                attrValueSingeQuote,
+                attrValueDoubleQuote
+            );
 
-            parser = SequenceOf(
+            var attr = FirstOf(
+                Sequence(attrName, CharScanner.Of('='), attrValue),
+                attrName
+            );
+
+            var tag = Sequence(
                 CharScanner.Of('<'),
-                tagName.WithSuccess(walker.WalkTagName),
-                ZeroOrMore(whitespaces),
+                tagName.WithSuccess(walker.WalkTag),
+                Maybe(OneOrMore(Sequence(
+                    OneOrMore(whitespaceChar),
+                    attr
+                ))),
+                ZeroOrMore(whitespaceChar),
+                ZeroOrMore(CharScanner.Of('/')),
                 CharScanner.Of('>')
             );
+            var endTag = Sequence(
+                Str("</"),
+                tagName.WithSuccess(walker.WalkEndTag),
+                ZeroOrMore(whitespaceChar),
+                CharScanner.Of('>')
+            );
+            var text = Sequence(anyChar.Except('<'));
+            var comment = Sequence(
+                Str("<!--"),
+                ZeroOrMore(
+                    Sequence(
+                        Not(Str("-->")),
+                        anyChar
+                    )
+                ).WithSuccess(walker.WalkComment),
+                Str("-->")
+            );
+
+            parser = ZeroOrMore(FirstOf(
+                comment,
+                endTag,
+                tag,
+                text
+            ));
         }
 
         public void Parse(string source) {
@@ -34,8 +87,24 @@ namespace HTMLToJS
     }
 
     public class HTMLWalker {
-        public void WalkTagName(string source, int start, int offset) {
-            Console.WriteLine(source.Substring(start, offset - start));
+        public void WalkTag(string source, int start, int offset) {
+            Console.WriteLine("TAG " + source.Substring(start, offset - start));
+        }
+
+        public void WalkAttrName(string source, int start, int offset) {
+            Console.WriteLine("ATTR NAME " + source.Substring(start, offset - start));
+        }
+
+        public void WalkAttrValue(string source, int start, int offset) {
+            Console.WriteLine("ATTR VALUE " + source.Substring(start, offset - start));
+        }
+
+        public void WalkEndTag(string source, int start, int offset) {
+            Console.WriteLine("END TAG " + source.Substring(start, offset - start));
+        }
+
+        public void WalkComment(string source, int start, int offset) {
+            Console.WriteLine("COMMENT " + source.Substring(start, offset - start));
         }
     }
 

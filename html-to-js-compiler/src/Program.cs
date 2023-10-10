@@ -7,7 +7,7 @@ namespace HTMLToJS
     {
         public static void Main(string[] args)
         {
-            string filename = "testfiles/simple.html";
+            string filename = "testfiles/example.html";
             string filecontent;
 
             using (var sr = new StreamReader(filename))
