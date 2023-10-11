@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-namespace HTMLToJS
+namespace HtmlToJs
 {
 
     public class Program
@@ -15,7 +15,7 @@ namespace HTMLToJS
                 filecontent = sr.ReadToEnd();
             }
 
-            var parser = new HTMLParser();
+            var parser = new HtmlParser();
             var root = parser.Parse(filecontent);
             Console.WriteLine(root);
         }

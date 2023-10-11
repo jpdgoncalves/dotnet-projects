@@ -1,17 +1,17 @@
 
 using System.Text;
-using HTMLToJS.Scanners;
-using static HTMLToJS.Scanners.Scanners;
+using HtmlToJs.Scanners;
+using static HtmlToJs.Scanners.Scanners;
 
-namespace HTMLToJS
+namespace HtmlToJs
 {
-    public class HTMLParser
+    public class HtmlParser
     {
 
         private ScanFunction parser;
-        private HTMLWalker walker = new HTMLWalker();
+        private HtmlWalker walker = new HtmlWalker();
 
-        public HTMLParser()
+        public HtmlParser()
         {
             var singleQuoteChar = CharScanner.Of('\'');
             var doubleQuoteChar = CharScanner.Of('"');
@@ -84,15 +84,15 @@ namespace HTMLToJS
             ));
         }
 
-        public HTMLNode Parse(string source)
+        public HtmlNode Parse(string source)
         {
-            walker.Root = HTMLNode.MakeTag("root");
+            walker.Root = HtmlNode.MakeTag("root");
             parser(source, 0);
             return walker.Root;
         }
     }
 
-    public class HTMLWalker
+    public class HtmlWalker
     {
         private static HashSet<string> _VoidElements = new HashSet<string>{
             "area", "base", "br", "col",
@@ -100,8 +100,8 @@ namespace HTMLToJS
             "input", "keygen", "link", "meta",
             "param", "source", "track", "wbr"
         };
-        private HTMLNode _root = HTMLNode.MakeTag("root");
-        public HTMLNode Root
+        private HtmlNode _root = HtmlNode.MakeTag("root");
+        public HtmlNode Root
         {
             get { return _root; }
             set
@@ -111,12 +111,12 @@ namespace HTMLToJS
                 _current = value;
             }
         }
-        private HTMLNode _parent;
-        private HTMLNode _current;
+        private HtmlNode _parent;
+        private HtmlNode _current;
 
         private string _curAttrName = "";
 
-        public HTMLWalker()
+        public HtmlWalker()
         {
             _parent = _root;
             _current = _root;
@@ -125,7 +125,7 @@ namespace HTMLToJS
         public void WalkTag(string source, int start, int offset)
         {
             var tagName = source.Substring(start, offset - start);
-            var tag = HTMLNode.MakeTag(tagName, parent: _parent);
+            var tag = HtmlNode.MakeTag(tagName, parent: _parent);
             _parent.Children.Add(tag);
             _current = tag;
             if (!_VoidElements.Contains(tagName)) _parent = tag;
@@ -134,7 +134,7 @@ namespace HTMLToJS
         public void WalkText(string source, int start, int offset)
         {
             var text = source.Substring(start, offset - start);
-            var tag = HTMLNode.MakeText(text, parent: _parent);
+            var tag = HtmlNode.MakeText(text, parent: _parent);
             _parent.Children.Add(tag);
         }
 
@@ -163,18 +163,18 @@ namespace HTMLToJS
         }
     }
 
-    public class HTMLNode
+    public class HtmlNode
     {
-        public readonly HTMLNode? Parent;
+        public readonly HtmlNode? Parent;
         public readonly HTMLNodeType Type;
         public readonly string? Name;
         public readonly string? InnerText;
         public readonly Dictionary<string, string> Attributes = new();
         public readonly List<string> Arguments = new();
-        public readonly List<HTMLNode> Children = new();
+        public readonly List<HtmlNode> Children = new();
 
-        private HTMLNode(
-            HTMLNodeType type, HTMLNode? parent = null,
+        private HtmlNode(
+            HTMLNodeType type, HtmlNode? parent = null,
             string? name = null, string? innerText = null
         )
         {
@@ -184,18 +184,18 @@ namespace HTMLToJS
             InnerText = innerText;
         }
 
-        public static HTMLNode MakeTag(string name, HTMLNode? parent = null) => new HTMLNode(
+        public static HtmlNode MakeTag(string name, HtmlNode? parent = null) => new HtmlNode(
             type: HTMLNodeType.TAG,
             parent: parent,
             name: name
         );
-        public static HTMLNode MakeText(string innerText, HTMLNode? parent = null) => new HTMLNode(
+        public static HtmlNode MakeText(string innerText, HtmlNode? parent = null) => new HtmlNode(
             type: HTMLNodeType.TEXT,
             parent: parent,
             innerText: innerText
         );
 
-        public HTMLNode? FindClosestAncestorByName(string name)
+        public HtmlNode? FindClosestAncestorByName(string name)
         {
             if (Name != null && Name.Equals(name)) return this;
             if (Parent == null) return null;
