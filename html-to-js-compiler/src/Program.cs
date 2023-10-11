@@ -16,8 +16,14 @@ namespace HtmlToJs
             }
 
             var parser = new HtmlParser();
+            var generator = new JsGenerator();
             var root = parser.Parse(filecontent);
-            Console.WriteLine(root);
+            var component = ComponentTree.Make(root);
+            var source = generator.GenerateComponent("Example2", component);
+
+            using (var sw = new StreamWriter("example2.js")) {
+                sw.Write(source);
+            }
         }
     }
 }
