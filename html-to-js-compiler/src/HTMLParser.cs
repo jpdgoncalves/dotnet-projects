@@ -170,7 +170,6 @@ namespace HtmlToJs
         public readonly string? Name;
         public readonly string? InnerText;
         public readonly Dictionary<string, string> Attributes = new();
-        public readonly List<string> Arguments = new();
         public readonly List<HtmlNode> Children = new();
 
         private HtmlNode(
