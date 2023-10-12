@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/net7.0/win-x64/html-to-js-compiler.dll",
-            "args": ["testfiles/example-test-2-getters.html"],
+            "args": ["testfiles/example-test-2.html"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
