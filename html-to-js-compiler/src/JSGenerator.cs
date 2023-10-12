@@ -7,122 +7,101 @@ namespace HtmlToJs
 
     public class JsGenerator
     {
-        private StringBuilder _observedAttr = new();
-        private StringBuilder _attrGetters = new();
-        private StringBuilder _constructor = new();
-        private StringBuilder _nodeGetters = new();
+        private string _genFuncName = "";
+        private string _genCompName = "";
+        private StringBuilder _funcBody = new();
+        private StringBuilder _getterFuncs = new();
 
-        public string GenerateComponent(string name, ComponentTree tree)
+        private JsGenerator(string filepath)
         {
-            StringBuilder sourceCode = new();
-            ComponentTree root = tree;
+            var filename = Path.GetFileNameWithoutExtension(filepath);
+            var temp = filename.Split("-");
+            var funcName = new StringBuilder();
+            var compName = new StringBuilder();
 
-            Reset();
-            GenerateObservedAttr(root);
-            GenerateAttrGetters(root);
-            GenerateConstructor(root);
-            GenerateNodeGetters(root);
-
-            sourceCode.AppendLine();
-            sourceCode.AppendLine($"export default class {name} {{");
-            sourceCode.AppendLine();
-            sourceCode.AppendLine($"    static observedAttributes = [{_observedAttr.ToString()}];");
-            sourceCode.AppendLine();
-
-            sourceCode.AppendLine("    #attrListeners = new Map();");
-            sourceCode.AppendLine("    #root;");
-            sourceCode.AppendLine();
-
-            sourceCode.AppendLine(_attrGetters.ToString());
-            sourceCode.AppendLine();
-
-            sourceCode.AppendLine("    constructor() {");
-            sourceCode.Append(_constructor.ToString());
-            sourceCode.AppendLine("    }");
-            sourceCode.AppendLine();
-
-            sourceCode.AppendLine("    watch(attr, fn) {");
-            sourceCode.AppendLine("        if (!this.#attrListeners.has(attr)) this.#attrListeners.set(attr, []);");
-            sourceCode.AppendLine("        this.#attrListeners.get(attr).push(fn);");
-            sourceCode.AppendLine("    }");
-            sourceCode.AppendLine();
-
-            sourceCode.Append(_nodeGetters.ToString());
-            sourceCode.AppendLine();
-            sourceCode.AppendLine("}");
-
-            sourceCode.AppendLine();
-            //TODO user defined name
-            sourceCode.Append($"customElements.define('place-holder', {name})");
-
-            return sourceCode.ToString();
-        }
-
-        private void GenerateNodeGetters(ComponentTree root, bool isRoot = true)
-        {
-            //TODO
-        }
-
-        private void GenerateConstructor(ComponentTree node, bool isRoot = true)
-        {
-            if (isRoot)
+            for (var i = 0; i < temp.Length; i++)
             {
-
-                _constructor.AppendLine($"        let root = document.createElement('div');");
-                _constructor.AppendLine($"        this.#root = root;");
-                _constructor.AppendLine();
-
-                foreach (var (attr, value) in node.Attributes)
+                var part = temp[i];
+                if (part.Length == 0) continue;
+                if (!char.IsLetter(part[0]) || part.Length == 1)
                 {
-                    _constructor.AppendLine($"        root.setAttribute('{attr}', '{value}');");
+                    funcName.Append(part);
+                }
+                else
+                {
+                    funcName.Append(char.ToUpper(part[0]) + part.Substring(1));
                 }
 
-                _constructor.AppendLine();
-                foreach (var child in node.Children) GenerateConstructor(child, isRoot: false);
-                _constructor.AppendLine();
-                foreach (var child in node.Children) _constructor.AppendLine($"        root.appendChild({child.Id});");
-
+                compName.Append(part);
             }
-            else if (node.Type == HTMLNodeType.TAG)
-            {
 
-                _constructor.AppendLine($"        let {node.Id} = document.createElement('{node.Name}');");
-                _constructor.AppendLine();
+            _genFuncName = funcName.ToString();
+            _genCompName = compName.ToString();
+        }
 
-                foreach (var (attr, value) in node.Attributes)
-                {
-                    _constructor.AppendLine($"        {node.Id}.setAttribute('{attr}', '{value}');");
+        private string GenerateCode(ComponentTree node)
+        {
+            StringBuilder code = new();
+
+            GenerateFuncBody(node);
+            GenerateGetterFuncs(node);
+
+            code.AppendLine();
+            code.AppendLine($"export default function base{_genFuncName}() {{");
+            code.Append(_funcBody);
+            code.AppendLine("}\n");
+            code.Append(_getterFuncs);
+
+            return code.ToString();
+        }
+
+        private void GenerateFuncBody(ComponentTree node, bool isRoot = true)
+        {
+            var vName = isRoot ? _genCompName : node.Id;
+
+            if (node.Type == HTMLNodeType.TAG) {
+                _funcBody.AppendLine($"    let {vName} = document.createElement({ToLiteral(node.Name)});");
+                foreach (var (attr, value) in node.Attributes) {
+                    _funcBody.AppendLine($"    {vName}.setAttribute({ToLiteral(attr)}, {ToLiteral(value)});");
                 }
-
-                _constructor.AppendLine();
-                foreach (var child in node.Children) GenerateConstructor(child, isRoot: false);
-                _constructor.AppendLine();
-                foreach (var child in node.Children) _constructor.AppendLine($"        {node.Id}.appendChild({child.Id});");
-
+                foreach (var child in node.Children) {
+                    _funcBody.AppendLine();
+                    GenerateFuncBody(child, false);
+                }
+                if (node.Children.Count > 0) _funcBody.AppendLine();
+                foreach (var child in node.Children) {
+                    _funcBody.AppendLine($"    {vName}.appendChild({child.Id});");
+                }
+            } else {
+                _funcBody.AppendLine($"    let {vName} = document.createTextNode({ToLiteral(node.InnerText)});");
             }
-            else
-            {
-                var text = node.InnerText != null ? node.InnerText : "";
-                _constructor.AppendLine($"        let {node.Id} = document.createTextNode({ToLiteral(text)});");
+
+            if (isRoot) {
+                _funcBody.AppendLine();
+                _funcBody.AppendLine($"    return {vName};");
             }
         }
 
-        private void GenerateAttrGetters(ComponentTree root, bool isRoot = true)
+        private void GenerateGetterFuncs(ComponentTree node, bool isRoot = true)
         {
-            //TODO
+            if (!isRoot && node.Attributes.ContainsKey("data-getter") && node.Attributes["data-getter"].Length != 0) {
+                var getterName = node.Attributes["data-getter"];
+                var path = node.GetPath();
+                _getterFuncs.AppendLine($"export function get{getterName}() {{");
+                _getterFuncs.Append($"    return {_genCompName}");
+                foreach (var p in path) {
+                    _getterFuncs.Append($".childNodes[{p}]");
+                }
+                _getterFuncs.AppendLine(";\n}\n");
+            }
+
+            foreach (var child in node.Children) GenerateGetterFuncs(child, false);
         }
 
-        private void GenerateObservedAttr(ComponentTree root, bool isRoot = true)
+        public static string GenerateComponentCode(string filepath, ComponentTree tree)
         {
-            //TODO
-        }
-
-        private void Reset()
-        {
-            _observedAttr.Clear();
-            _attrGetters.Clear();
-            _constructor.Clear();
-            _nodeGetters.Clear();
+            var generator = new JsGenerator(filepath);
+            return generator.GenerateCode(tree);
         }
 
         private static string ToLiteral(string input)
@@ -169,9 +148,9 @@ namespace HtmlToJs
         public readonly ComponentTree? Parent;
         public readonly int? ChildIndex;
         public readonly HTMLNodeType Type;
-        public readonly string? Name;
+        public readonly string Name;
         public readonly string Id;
-        public readonly string? InnerText;
+        public readonly string InnerText;
         public readonly Dictionary<string, string> Attributes = new();
         public readonly List<ComponentTree> Children = new();
 
@@ -204,8 +183,8 @@ namespace HtmlToJs
         private string InternalToString(string indent = "")
         {
             StringBuilder builder = new();
-            builder.Append($"{indent}ComponentTree: Type {Type}, Name {Name}, Id {Id}, Parent {(Parent != null ? Parent.Name : null)}\n");
-            builder.Append($"{indent}               Id {Id}, Innertext {InnerText}\n");
+            builder.Append($"{indent}ComponentTree: Type {Type}, Name {Name}, Parent {(Parent != null ? Parent.Name : null)}\n");
+            builder.Append($"{indent}               ChildIndex {ChildIndex}, Id {Id}, Innertext {InnerText}\n");
             foreach (var (key, value) in Attributes)
             {
                 builder.Append(indent);

@@ -7,7 +7,13 @@ namespace HtmlToJs
     {
         public static void Main(string[] args)
         {
-            string filename = "testfiles/example2.html";
+            if (args.Length == 0 && Path.GetExtension(args[0]).Equals(".html")) {
+                Console.WriteLine("Please provide an html file.");
+                Environment.Exit(1);
+            }
+
+            string filename = args[0];
+            var outfilename = Path.ChangeExtension(filename, ".mjs");
             string filecontent;
 
             using (var sr = new StreamReader(filename))
@@ -16,12 +22,11 @@ namespace HtmlToJs
             }
 
             var parser = new HtmlParser();
-            var generator = new JsGenerator();
             var root = parser.Parse(filecontent);
             var component = ComponentTree.Make(root);
-            var source = generator.GenerateComponent("Example2", component);
+            var source = JsGenerator.GenerateComponentCode(filename, component);
 
-            using (var sw = new StreamWriter("example2.js")) {
+            using (var sw = new StreamWriter(outfilename)) {
                 sw.Write(source);
             }
         }

@@ -172,14 +172,14 @@ namespace HtmlToJs
     {
         public readonly HtmlNode? Parent;
         public readonly HTMLNodeType Type;
-        public readonly string? Name;
-        public readonly string? InnerText;
+        public readonly string Name = "";
+        public readonly string InnerText = "";
         public readonly Dictionary<string, string> Attributes = new();
         public readonly List<HtmlNode> Children = new();
 
         private HtmlNode(
             HTMLNodeType type, HtmlNode? parent = null,
-            string? name = null, string? innerText = null
+            string name = "", string innerText = ""
         )
         {
             Type = type;
