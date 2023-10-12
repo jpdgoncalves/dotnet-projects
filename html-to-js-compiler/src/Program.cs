@@ -7,7 +7,7 @@ namespace HtmlToJs
     {
         public static void Main(string[] args)
         {
-            if (args.Length == 0 && Path.GetExtension(args[0]).Equals(".html")) {
+            if (args.Length == 0 || Path.GetExtension(args[0]).Equals(".html")) {
                 Console.WriteLine("Please provide an html file.");
                 Environment.Exit(1);
             }
