@@ -88,11 +88,6 @@ namespace HtmlToJs
         {
             walker.Root = HtmlNode.MakeTag("root");
             parser(source, 0);
-            
-            foreach (var child in walker.Root.Children) {
-                if (child.Type == HtmlNode.HTMLNodeType.TAG) return child;
-            }
-
             return walker.Root;
         }
     }
