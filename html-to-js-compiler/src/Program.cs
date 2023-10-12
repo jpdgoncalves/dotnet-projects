@@ -13,7 +13,7 @@ namespace HtmlToJs
             }
 
             string filename = args[0];
-            var outfilename = Path.ChangeExtension(filename, ".mjs");
+            var outfilename = Path.ChangeExtension(filename, ".generated.mjs");
             string filecontent;
 
             using (var sr = new StreamReader(filename))
