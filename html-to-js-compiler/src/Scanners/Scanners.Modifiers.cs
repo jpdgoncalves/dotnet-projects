@@ -26,7 +26,7 @@ namespace HtmlToJs.Scanners {
         /// <param name="scanner">The ScanFunction that must not be matched</param>
         /// <returns>
         /// A ScanFunction whose success is inverse to the success of the
-        /// scanner. The offset returned is always the start.
+        /// scanner. The returned offset of the scanner is not changed.
         /// </returns>
         public static ScanFunction Not(ScanFunction scanner) {
             return (string source, int start) => {
