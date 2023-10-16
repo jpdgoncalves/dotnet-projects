@@ -159,7 +159,7 @@ namespace HtmlToJs
 
         public void WalkComment(string source, int start, int offset)
         {
-            Console.WriteLine($"{{{{COMMENT {source.Substring(start, offset - start)}}}}}");
+            // Console.WriteLine($"{{{{COMMENT {source.Substring(start, offset - start)}}}}}");
         }
     }
 
