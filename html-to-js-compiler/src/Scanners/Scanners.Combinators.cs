@@ -35,7 +35,7 @@ namespace HtmlToJs.Scanners {
         /// <returns>
         /// A ScanFunction that is successful if it matches the whole sequence
         /// of scanners, returning the offset of where it stopped. Otherwise
-        /// it fails and returns the starting offset.
+        /// it fails and returns the offset of the last successful match.
         /// </returns>
         public static ScanFunction Sequence(params ScanFunction[] scanners) {
             return (string source, int start) => {
