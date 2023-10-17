@@ -96,8 +96,14 @@ namespace HtmlToJs
             ));
         }
 
-        public HtmlTree Parse(string source)
+        public HtmlTree Parse(string filepath)
         {
+            string source;
+            using (var sr = new StreamReader(filepath))
+            {
+                source = sr.ReadToEnd();
+            }
+
             walker.Root = HtmlTree.MakeTag("root");
             parser(source, 0);
             return walker.Root;

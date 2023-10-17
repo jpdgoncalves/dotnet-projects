@@ -104,10 +104,15 @@ namespace HtmlToJs
             foreach (var child in node.Children) GenerateGetterFuncs(child, false);
         }
 
-        public static string GenerateComponentCode(string filepath, ComponentTree tree)
+        public static void GenerateComponentCode(string inFilePath, string outFilePath)
         {
             var generator = new JsGenerator();
-            return generator.GenerateCode(tree);
+            var parser = new HtmlParser();
+            var tree = ComponentTree.Make(parser.Parse(inFilePath));
+
+            using (var sw = new StreamWriter(outFilePath)) {
+                sw.Write(generator.GenerateCode(tree));
+            }
         }
 
         private static string ToLiteral(string input)

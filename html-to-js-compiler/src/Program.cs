@@ -14,21 +14,8 @@ namespace HtmlToJs
 
             string filename = args[0];
             var outfilename = Path.ChangeExtension(filename, ".generated.mjs");
-            string filecontent;
-
-            using (var sr = new StreamReader(filename))
-            {
-                filecontent = sr.ReadToEnd();
-            }
-
-            var parser = new HtmlParser();
-            var root = parser.Parse(filecontent);
-            var component = ComponentTree.Make(root);
-            var source = JsGenerator.GenerateComponentCode(filename, component);
-
-            using (var sw = new StreamWriter(outfilename)) {
-                sw.Write(source);
-            }
+            
+            JsGenerator.GenerateComponentCode(filename, outfilename);
         }
     }
 }
