@@ -1,5 +1,3 @@
-
-using System.Text;
 using HtmlToJs.Scanners;
 using static HtmlToJs.Scanners.Scanners;
 
@@ -84,9 +82,9 @@ namespace HtmlToJs
             ));
         }
 
-        public HtmlNode Parse(string source)
+        public HtmlTree Parse(string source)
         {
-            walker.Root = HtmlNode.MakeTag("root");
+            walker.Root = HtmlTree.MakeTag("root");
             parser(source, 0);
             return walker.Root;
         }
@@ -100,8 +98,8 @@ namespace HtmlToJs
             "input", "keygen", "link", "meta",
             "param", "source", "track", "wbr"
         };
-        private HtmlNode _root = HtmlNode.MakeTag("root");
-        public HtmlNode Root
+        private HtmlTree _root = HtmlTree.MakeTag("root");
+        public HtmlTree Root
         {
             get { return _root; }
             set
@@ -111,8 +109,8 @@ namespace HtmlToJs
                 _current = value;
             }
         }
-        private HtmlNode _parent;
-        private HtmlNode _current;
+        private HtmlTree _parent;
+        private HtmlTree _current;
 
         private string _curAttrName = "";
 
@@ -125,7 +123,7 @@ namespace HtmlToJs
         public void WalkTag(string source, int start, int offset)
         {
             var tagName = source.Substring(start, offset - start);
-            var tag = HtmlNode.MakeTag(tagName, parent: _parent);
+            var tag = HtmlTree.MakeTag(tagName, parent: _parent);
             _parent.Children.Add(tag);
             _current = tag;
             if (!_VoidElements.Contains(tagName)) _parent = tag;
@@ -134,7 +132,7 @@ namespace HtmlToJs
         public void WalkText(string source, int start, int offset)
         {
             var text = source.Substring(start, offset - start);
-            var tag = HtmlNode.MakeText(text, parent: _parent);
+            var tag = HtmlTree.MakeText(text, parent: _parent);
             _parent.Children.Add(tag);
         }
 
@@ -161,70 +159,5 @@ namespace HtmlToJs
         {
             // Console.WriteLine($"{{{{COMMENT {source.Substring(start, offset - start)}}}}}");
         }
-    }
-
-    public class HtmlNode
-    {
-        public readonly HtmlNode? Parent;
-        public readonly HTMLNodeType Type;
-        public readonly string Name = "";
-        public readonly string InnerText = "";
-        public readonly Dictionary<string, string> Attributes = new();
-        public readonly List<HtmlNode> Children = new();
-
-        private HtmlNode(
-            HTMLNodeType type, HtmlNode? parent = null,
-            string name = "", string innerText = ""
-        )
-        {
-            Type = type;
-            Parent = parent;
-            Name = name;
-            InnerText = innerText;
-        }
-
-        public static HtmlNode MakeTag(string name, HtmlNode? parent = null) => new HtmlNode(
-            type: HTMLNodeType.TAG,
-            parent: parent,
-            name: name
-        );
-        public static HtmlNode MakeText(string innerText, HtmlNode? parent = null) => new HtmlNode(
-            type: HTMLNodeType.TEXT,
-            parent: parent,
-            innerText: innerText
-        );
-
-        public HtmlNode? FindClosestAncestorByName(string name)
-        {
-            if (Name != null && Name.Equals(name)) return this;
-            if (Parent == null) return null;
-            return Parent.FindClosestAncestorByName(name);
-        }
-
-        public override string ToString()
-        {
-            return InternalToString();
-        }
-
-        private string InternalToString(string indent = "")
-        {
-            StringBuilder builder = new();
-            builder.Append($"{indent}HTMLNode: Type {Type}, Name {Name}, Parent {(Parent != null ? Parent.Name : null)}, Innertext {InnerText}\n");
-            foreach (var (key, value) in Attributes)
-            {
-                builder.Append(indent);
-                builder.Append("  ");
-                builder.Append($"- AttrName {key}, Value: {value}\n");
-            }
-
-            foreach (var child in Children)
-            {
-                builder.Append(child.InternalToString(indent + "  "));
-            }
-
-            return builder.ToString();
-        }
-
-        public enum HTMLNodeType { TAG, TEXT }
     }
 }

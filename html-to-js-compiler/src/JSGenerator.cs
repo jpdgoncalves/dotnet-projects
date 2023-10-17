@@ -1,6 +1,6 @@
 
 using System.Text;
-using static HtmlToJs.HtmlNode;
+using static HtmlToJs.HtmlTree;
 
 namespace HtmlToJs
 {
@@ -92,7 +92,7 @@ namespace HtmlToJs
             {
                 var getterName = node.Attributes["data-getter"];
                 var path = node.GetPath();
-                _getterFuncs.AppendLine($"export function get{getterName}() {{");
+                _getterFuncs.AppendLine($"export function get{getterName}({_genCompName}) {{");
                 _getterFuncs.Append($"    return {_genCompName}");
                 foreach (var p in path)
                 {
@@ -145,90 +145,6 @@ namespace HtmlToJs
             }
             literal.Append("\"");
             return literal.ToString();
-        }
-    }
-
-    public class ComponentTree
-    {
-        private static int _nextId = 0;
-        public readonly ComponentTree? Parent;
-        public readonly int? ChildIndex;
-        public readonly HTMLNodeType Type;
-        public readonly string Name;
-        public readonly string Id;
-        public readonly string InnerText;
-        public readonly Dictionary<string, string> Attributes = new();
-        public readonly List<ComponentTree> Children = new();
-
-        private ComponentTree(
-            HtmlNode node, ComponentTree? parent,
-            int? childIndex = null
-        )
-        {
-            Parent = parent;
-            ChildIndex = childIndex;
-            Type = node.Type;
-            Name = node.Name;
-            Id = Type == HTMLNodeType.TAG ? node.Name + _nextId++ : "text" + _nextId++;
-            InnerText = node.InnerText;
-        }
-
-        public List<int> GetPath()
-        {
-            if (ChildIndex == null || Parent == null) return new();
-            var path = Parent.GetPath();
-            path.Add(ChildIndex.Value);
-            return path;
-        }
-
-        public override string ToString()
-        {
-            return InternalToString();
-        }
-
-        private string InternalToString(string indent = "")
-        {
-            StringBuilder builder = new();
-            builder.Append($"{indent}ComponentTree: Type {Type}, Name {Name}, Parent {(Parent != null ? Parent.Name : null)}\n");
-            builder.Append($"{indent}               ChildIndex {ChildIndex}, Id {Id}, Innertext {InnerText}\n");
-            foreach (var (key, value) in Attributes)
-            {
-                builder.Append(indent);
-                builder.Append("  ");
-                builder.Append($"- AttrName {key}, Value: {value}\n");
-            }
-
-            foreach (var child in Children)
-            {
-                builder.Append(child.InternalToString(indent + "  "));
-            }
-
-            return builder.ToString();
-        }
-
-        public static ComponentTree Make(HtmlNode root)
-        {
-            _nextId = 0;
-            return MakeInternal(root);
-        }
-
-        private static ComponentTree MakeInternal(HtmlNode node, ComponentTree? parent = null, int? childIndex = null)
-        {
-            var component = new ComponentTree(node, parent, childIndex);
-
-            foreach (var (attr, value) in node.Attributes)
-            {
-                component.Attributes.Add(attr, value);
-            }
-
-            var children = node.Children;
-            var childrenCount = children.Count;
-            for (var i = 0; i < childrenCount; i++)
-            {
-                component.Children.Add(MakeInternal(children[i], component, i));
-            }
-
-            return component;
         }
     }
 }
