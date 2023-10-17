@@ -11,22 +11,34 @@ namespace HtmlToJs
 
         public HtmlParser()
         {
+            var anyChar = CharScanner.Any;
+            var slashChar = CharScanner.Of('/');
             var singleQuoteChar = CharScanner.Of('\'');
             var doubleQuoteChar = CharScanner.Of('"');
-            var anyChar = CharScanner.Any;
-
-            var tagNameChar = CharScanner.AsciiLettersDigits.And('-');
-            var attrNameChar = CharScanner.AsciiLettersDigits.And('-');
-            var attrValueChar = CharScanner.AsciiLettersDigits;
             var whitespaceChar = CharScanner.AsciiWhitespaces;
+            var lowerThanChar = CharScanner.Of('<');
+            var greaterThanChar = CharScanner.Of('>');
+            var exclamationSign = CharScanner.Of('!');
+            var equalChar = CharScanner.Of('=');
+
+            var endTagStart = Str("</");
+
+            var tagNameChar = anyChar.Except(
+                whitespaceChar, lowerThanChar, greaterThanChar,
+                equalChar, singleQuoteChar, doubleQuoteChar,
+                exclamationSign
+            );
+            var attrNameChar = tagNameChar;
+            var attrValueChar = tagNameChar;
+
 
             var attrValueUnquoted = OneOrMore(attrValueChar).WithSuccess(walker.WalkAttrValue);
-            var attrValueSingleQuote = Sequence(
+            var attrValueSingleQuote = SequenceOf(
                 singleQuoteChar,
                 ZeroOrMore(anyChar.Except(singleQuoteChar)).WithSuccess(walker.WalkAttrValue),
                 singleQuoteChar
             );
-            var attrValueDoubleQuote = Sequence(
+            var attrValueDoubleQuote = SequenceOf(
                 doubleQuoteChar,
                 ZeroOrMore(anyChar.Except(doubleQuoteChar)).WithSuccess(walker.WalkAttrValue),
                 doubleQuoteChar
@@ -41,36 +53,38 @@ namespace HtmlToJs
             );
 
             var attr = FirstOf(
-                Sequence(attrName, CharScanner.Of('='), attrValue),
+                SequenceOf(attrName, equalChar, attrValue),
                 attrName
             );
 
-            var tag = Sequence(
-                CharScanner.Of('<'),
-                tagName.WithSuccess(walker.WalkTag),
-                Maybe(OneOrMore(Sequence(
+            var attrSequence = OneOrMore(
+                SequenceOf(
                     OneOrMore(whitespaceChar),
                     attr
-                ))),
-                ZeroOrMore(whitespaceChar),
-                ZeroOrMore(CharScanner.Of('/')),
-                CharScanner.Of('>')
+                )
             );
-            var endTag = Sequence(
-                Str("</"),
+
+            var tag = SequenceOf(
+                lowerThanChar,
+                tagName.WithSuccess(walker.WalkTag),
+                Maybe(attrSequence),
+                ZeroOrMore(whitespaceChar),
+                ZeroOrMore(slashChar),
+                greaterThanChar
+            );
+            var endTag = SequenceOf(
+                endTagStart,
                 tagName.WithSuccess(walker.WalkEndTag),
                 ZeroOrMore(whitespaceChar),
-                CharScanner.Of('>')
+                greaterThanChar
             );
+
             var text = OneOrMore(anyChar.Except('<')).WithSuccess(walker.WalkText);
-            var comment = Sequence(
+
+            var commentText = Expression(@"(.*?)(?:-->)");
+            var comment = SequenceOf(
                 Str("<!--"),
-                ZeroOrMore(
-                    Sequence(
-                        Not(Str("-->")),
-                        anyChar
-                    )
-                ).WithSuccess(walker.WalkComment),
+                commentText.WithSuccess(walker.WalkComment),
                 Str("-->")
             );
 
