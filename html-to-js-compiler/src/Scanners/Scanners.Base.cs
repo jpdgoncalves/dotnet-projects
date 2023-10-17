@@ -147,8 +147,22 @@ namespace HtmlToJs.Scanners
             return combined;
         }
 
+        /// <summary>
+        /// Creates a CharScanner whose success depends
+        /// on the scanned chars not being any of the ones
+        /// provided. Overrides previously expected characters.
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <returns></returns>
         public CharScanner Except(params char[] chars) => Except(chars.AsEnumerable());
 
+        /// <summary>
+        /// Creates a CharScanner whose success depends
+        /// on the scanned chars not being any of the ones
+        /// provided. Overrides previously expected characters.
+        /// </summary>
+        /// <param name="charSets"></param>
+        /// <returns></returns>
         public CharScanner Except(params IEnumerable<char>[] charSets)
         {
             var combined = new CharScanner();
@@ -176,8 +190,20 @@ namespace HtmlToJs.Scanners
             return combined;
         }
 
+        /// <summary>
+        /// Creates a CharScanner that expects only
+        /// the provided characters
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <returns></returns>
         public static CharScanner Of(params char[] chars) => Of(chars.AsEnumerable());
 
+        /// <summary>
+        /// Creates a CharScanner that expects only
+        /// the provided characters
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <returns></returns>
         public static CharScanner Of(params IEnumerable<char>[] charSets)
         {
             CharScanner scanner = new();
@@ -209,6 +235,9 @@ namespace HtmlToJs.Scanners
         /// A CharScanner that accepts any character.
         /// </summary>
         public static CharScanner Any = new CharScanner { _anyChar = true };
+        /// <summary>
+        /// A CharScanner that accepts characters from a to z (lowercase)
+        /// </summary>
         public static CharScanner AsciiLowerLetters = Of(CharSets.AsciiLowerLetters);
         public static CharScanner AsciiUpperLetters = Of(CharSets.AsciiUpperLetters);
         public static CharScanner AsciiDigits = Of(CharSets.AsciiDigits);
@@ -236,7 +265,10 @@ namespace HtmlToJs.Scanners
         /// A Scan Function that expects the exact string that was provided.
         /// </summary>
         /// <param name="pattern">The expected string</param>
-        /// <returns></returns>
+        /// <returns>
+        /// A ScanFunction that is successful if it scans the full patterns. If
+        /// it fails it returns the offset of where it failed
+        /// </returns>
         public static ScanFunction Str(string pattern)
         {
             return (string source, int start) =>

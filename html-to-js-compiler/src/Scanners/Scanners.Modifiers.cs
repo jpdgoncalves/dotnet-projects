@@ -77,6 +77,15 @@ namespace HtmlToJs.Scanners {
             };
         }
 
+        /// <summary>
+        /// Modifies the scanner function so it returns the start offset
+        /// as its end offset.
+        /// </summary>
+        /// <param name="scanner"></param>
+        /// <returns>
+        /// A ScanFunction that returns the start offset as its 
+        /// end offset
+        /// </returns>
         public static ScanFunction DoNotConsume(this ScanFunction scanner) {
             return (string source, int start) => {
                 var result = scanner(source, start);
