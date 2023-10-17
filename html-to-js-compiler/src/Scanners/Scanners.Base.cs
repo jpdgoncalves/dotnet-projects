@@ -1,4 +1,6 @@
 
+using System.Text.RegularExpressions;
+
 namespace HtmlToJs.Scanners
 {
     public static class CharSets
@@ -212,6 +214,22 @@ namespace HtmlToJs.Scanners
         }
 
         /// <summary>
+        /// Creates a CharScanner that is the combination of all other
+        /// CharScanners in the provided order.
+        /// </summary>
+        public static CharScanner Of(params CharScanner[] scanners) {
+            var combined = new CharScanner();
+
+            foreach(var scanner in scanners) {
+                combined._anyChar |= scanner._anyChar;
+                combined.Expect(scanner._expected);
+                combined.Forbid(scanner._forbidden);
+            }
+
+            return combined;
+        }
+
+        /// <summary>
         /// Creates a CharScanner that expects any character except
         /// the ones provided.
         /// </summary>
@@ -279,6 +297,29 @@ namespace HtmlToJs.Scanners
                     if (pattern[i] != source[start + i]) return (false, start + i);
                 }
                 return (i == pattern.Length, start + i);
+            };
+        }
+
+        /// <summary>
+        /// Creates a ScanFunction from the provided
+        /// regular expression. A \G will be prepended
+        /// to the provided expression.
+        /// If there are groups, the ScanFunction will
+        /// return an offset corresponding to the character 
+        /// after the end of said group in the string.
+        /// Otherwise the offset returned will be that
+        /// of the start + the length of the match.
+        /// </summary>
+        public static ScanFunction Expression(string pattern) {
+            Regex regex = new(@"\G" + pattern);
+
+            return (string source, int start) => {
+                var match = regex.Match(source, start);
+                if (!match.Success) return (false, start);
+                if (match.Groups.Count == 0) return (true, start + match.Length);
+                
+                var group = match.Groups[match.Groups.Count - 1];
+                return (true, group.Index + group.Length);
             };
         }
     }
