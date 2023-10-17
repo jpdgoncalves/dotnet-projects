@@ -37,7 +37,7 @@ namespace HtmlToJs.Scanners {
         /// of scanners, returning the offset of where it stopped. Otherwise
         /// it fails and returns the offset of the last successful match.
         /// </returns>
-        public static ScanFunction Sequence(params ScanFunction[] scanners) {
+        public static ScanFunction SequenceOf(params ScanFunction[] scanners) {
             return (string source, int start) => {
                 var lastOffset = start;
                 foreach(var scanner in scanners) {
