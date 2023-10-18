@@ -5,68 +5,57 @@ using static HtmlToJs.HtmlTree;
 namespace HtmlToJs
 {
 
-    public class JsGenerator
+    public static class JsGenerator
     {
-        public static string GETTER_KEY = "data-getter";
-        private StringBuilder _funcBody = new();
-        private StringBuilder _getterFuncs = new();
 
-        private JsGenerator() { }
-
-        private string GenerateComponent(ComponentTree node)
+        private static string GenerateComponent(ComponentTree node)
         {
-            _funcBody.Clear();
-            _getterFuncs.Clear();
             StringBuilder code = new();
-            string componentName = node.ComponentName;
-
-            GenerateFuncBody(node);
-            GenerateGetterFuncs(node);
 
             code.AppendLine();
-            code.AppendLine($"export function base{componentName}() {{");
-            code.Append(_funcBody);
+            code.AppendLine($"export function base{node.ComponentName}() {{");
+            GenerateFuncBody(node, code);
             code.AppendLine("}\n");
-            code.Append(_getterFuncs);
+            GenerateGetterFuncs(node, code);
 
             return code.ToString();
         }
 
-        private void GenerateFuncBody(ComponentTree node)
+        private static void GenerateFuncBody(ComponentTree node, StringBuilder code)
         {
             var vName = node == node.Root ? node.ComponentName : node.Id;
 
             if (node.Type == HTMLNodeType.TAG)
             {
-                _funcBody.AppendLine($"    let {vName} = document.createElement({ToLiteral(node.Name)});");
+                code.AppendLine($"    let {vName} = document.createElement({ToLiteral(node.Name)});");
                 foreach (var (attr, value) in node.Attributes)
                 {
-                    _funcBody.AppendLine($"    {vName}.setAttribute({ToLiteral(attr)}, {ToLiteral(value)});");
+                    code.AppendLine($"    {vName}.setAttribute({ToLiteral(attr)}, {ToLiteral(value)});");
                 }
                 foreach (var child in node.Children)
                 {
-                    _funcBody.AppendLine();
-                    GenerateFuncBody(child);
+                    code.AppendLine();
+                    GenerateFuncBody(child, code);
                 }
-                if (node.Children.Count > 0) _funcBody.AppendLine();
+                if (node.Children.Count > 0) code.AppendLine();
                 foreach (var child in node.Children)
                 {
-                    _funcBody.AppendLine($"    {vName}.appendChild({child.Id});");
+                    code.AppendLine($"    {vName}.appendChild({child.Id});");
                 }
             }
             else
             {
-                _funcBody.AppendLine($"    let {vName} = document.createTextNode({ToLiteral(node.InnerText)});");
+                code.AppendLine($"    let {vName} = document.createTextNode({ToLiteral(node.InnerText)});");
             }
 
             if (node == node.Root)
             {
-                _funcBody.AppendLine();
-                _funcBody.AppendLine($"    return {vName};");
+                code.AppendLine();
+                code.AppendLine($"    return {vName};");
             }
         }
 
-        private void GenerateGetterFuncs(ComponentTree node)
+        private static void GenerateGetterFuncs(ComponentTree node, StringBuilder code)
         {
             var isRoot = node.IsRoot;
             var componentName = node.Root.ComponentNameLower;
@@ -75,21 +64,20 @@ namespace HtmlToJs
             {
                 var getterName = node.GetterName;
                 var path = node.GetPath();
-                _getterFuncs.AppendLine($"export function get{getterName}({componentName}) {{");
-                _getterFuncs.Append($"    return {componentName}");
+                code.AppendLine($"export function get{getterName}({componentName}) {{");
+                code.Append($"    return {componentName}");
                 foreach (var p in path)
                 {
-                    _getterFuncs.Append($".childNodes[{p}]");
+                    code.Append($".childNodes[{p}]");
                 }
-                _getterFuncs.AppendLine(";\n}\n");
+                code.AppendLine(";\n}\n");
             }
 
-            foreach (var child in node.Children) GenerateGetterFuncs(child);
+            foreach (var child in node.Children) GenerateGetterFuncs(child, code);
         }
 
         public static void GenerateComponents(string inFilePath, string outFilePath)
         {
-            var generator = new JsGenerator();
             var parser = new HtmlParser();
             var htmlRoot = parser.Parse(inFilePath);
             var components = htmlRoot.Children.FindAll(ComponentTree.HasComponentName);
@@ -99,7 +87,7 @@ namespace HtmlToJs
                 foreach (var component in components)
                 {
                     var tree = ComponentTree.Make(component);
-                    sw.Write(generator.GenerateComponent(tree));
+                    sw.Write(GenerateComponent(tree));
                 }
             }
         }
