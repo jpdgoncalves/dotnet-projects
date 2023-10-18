@@ -7,8 +7,8 @@ namespace HtmlToJs
     public class ComponentTree
     {
         private static int _nextId = 0;
-        private static string COMPONENT_KEY = "data-component";
-        private static string GETTER_KEY = "data-getter";
+        private static readonly string COMPONENT_KEY = "data-component";
+        private static readonly string GETTER_KEY = "data-getter";
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
