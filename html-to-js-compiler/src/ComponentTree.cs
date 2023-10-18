@@ -12,25 +12,10 @@ namespace HtmlToJs
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
-        public string ComponentName
-        {
-            get
-            {
-                return IsRoot ? Attributes[COMPONENT_KEY] : Root.ComponentName;
-            }
-        }
-        public bool IsGetter
-        {
-            get
-            {
-                return Attributes.ContainsKey(GETTER_KEY);
-            }
-        }
-        public string GetterName {
-            get {
-                return IsGetter ? Attributes[GETTER_KEY] : "";
-            }
-        }
+        public readonly string ComponentName;
+        public readonly string ComponentNameLower;
+        public readonly bool IsGetter;
+        public readonly string GetterName;
         public readonly ComponentTree? Parent;
         public readonly int? ChildIndex;
         public readonly HTMLNodeType Type;
@@ -47,6 +32,11 @@ namespace HtmlToJs
         {
             Root = parent == null ? this : parent.Root;
             IsRoot = Root == this;
+            ComponentName = IsRoot ? Attributes[COMPONENT_KEY] : Root.ComponentName;
+            ComponentNameLower = IsRoot ? ComponentName.ToLower() : Root.ComponentNameLower;
+            IsGetter = Attributes.ContainsKey(GETTER_KEY) && Attributes[GETTER_KEY].Length > 0;
+            GetterName = IsGetter ? Attributes[GETTER_KEY] : "";
+
             Parent = parent;
             ChildIndex = childIndex;
             Type = node.Type;

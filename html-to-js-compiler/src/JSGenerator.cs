@@ -15,6 +15,8 @@ namespace HtmlToJs
 
         private string GenerateComponent(ComponentTree node)
         {
+            _funcBody.Clear();
+            _getterFuncs.Clear();
             StringBuilder code = new();
             string componentName = node.ComponentName;
 
@@ -67,11 +69,11 @@ namespace HtmlToJs
         private void GenerateGetterFuncs(ComponentTree node)
         {
             var isRoot = node.IsRoot;
-            var componentName = node.Root.ComponentName.ToLower();
+            var componentName = node.Root.ComponentNameLower;
 
-            if (!isRoot && node.Attributes.ContainsKey(GETTER_KEY) && node.Attributes[GETTER_KEY].Length != 0)
+            if (!isRoot && node.IsGetter)
             {
-                var getterName = node.Attributes[GETTER_KEY];
+                var getterName = node.GetterName;
                 var path = node.GetPath();
                 _getterFuncs.AppendLine($"export function get{getterName}({componentName}) {{");
                 _getterFuncs.Append($"    return {componentName}");
@@ -85,7 +87,7 @@ namespace HtmlToJs
             foreach (var child in node.Children) GenerateGetterFuncs(child);
         }
 
-        public static void GenerateComponentCode(string inFilePath, string outFilePath)
+        public static void GenerateComponents(string inFilePath, string outFilePath)
         {
             var generator = new JsGenerator();
             var parser = new HtmlParser();

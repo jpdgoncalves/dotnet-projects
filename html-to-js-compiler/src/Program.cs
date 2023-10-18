@@ -15,7 +15,7 @@ namespace HtmlToJs
             string filename = args[0];
             var outfilename = Path.ChangeExtension(filename, ".generated.mjs");
             
-            JsGenerator.GenerateComponentCode(filename, outfilename);
+            JsGenerator.GenerateComponents(filename, outfilename);
         }
     }
 }
