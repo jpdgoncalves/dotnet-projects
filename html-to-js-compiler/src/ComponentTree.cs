@@ -7,22 +7,15 @@ namespace HtmlToJs
     public class ComponentTree
     {
         private static int _nextId = 0;
-        public static string COMPONENT_KEY = "data-component";
+        private static string COMPONENT_KEY = "data-component";
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
-        public bool IsComponent
-        {
-            get
-            {
-                return Attributes.ContainsKey(COMPONENT_KEY) && Attributes[COMPONENT_KEY].Length > 0;
-            }
-        }
         public string ComponentName
         {
             get
             {
-                return IsComponent ? Attributes[COMPONENT_KEY] : "";
+                return IsRoot ? Attributes[COMPONENT_KEY] : Root.ComponentName;
             }
         }
         public readonly ComponentTree? Parent;
@@ -40,7 +33,7 @@ namespace HtmlToJs
         )
         {
             Root = parent == null ? this : parent.Root;
-            IsRoot = this == Root;
+            IsRoot = Root == this;
             Parent = parent;
             ChildIndex = childIndex;
             Type = node.Type;
@@ -63,6 +56,9 @@ namespace HtmlToJs
 
         public static ComponentTree Make(HtmlTree root)
         {
+            if (!HasComponentName(root)) 
+                throw new ArgumentException($"Provided HtmlTree root doesn't have a non empty '{COMPONENT_KEY}' attribute");
+            
             return MakeInternal(root);
         }
 
