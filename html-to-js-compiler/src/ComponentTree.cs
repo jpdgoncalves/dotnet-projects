@@ -8,6 +8,7 @@ namespace HtmlToJs
     {
         private static int _nextId = 0;
         private static string COMPONENT_KEY = "data-component";
+        private static string GETTER_KEY = "data-getter";
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
@@ -16,6 +17,18 @@ namespace HtmlToJs
             get
             {
                 return IsRoot ? Attributes[COMPONENT_KEY] : Root.ComponentName;
+            }
+        }
+        public bool IsGetter
+        {
+            get
+            {
+                return Attributes.ContainsKey(GETTER_KEY);
+            }
+        }
+        public string GetterName {
+            get {
+                return IsGetter ? Attributes[GETTER_KEY] : "";
             }
         }
         public readonly ComponentTree? Parent;
@@ -50,15 +63,16 @@ namespace HtmlToJs
             return path;
         }
 
-        public static bool HasComponentName(HtmlTree html) {
+        public static bool HasComponentName(HtmlTree html)
+        {
             return html.Attributes.ContainsKey(COMPONENT_KEY) && html.Attributes[COMPONENT_KEY].Length > 0;
         }
 
         public static ComponentTree Make(HtmlTree root)
         {
-            if (!HasComponentName(root)) 
+            if (!HasComponentName(root))
                 throw new ArgumentException($"Provided HtmlTree root doesn't have a non empty '{COMPONENT_KEY}' attribute");
-            
+
             return MakeInternal(root);
         }
 
