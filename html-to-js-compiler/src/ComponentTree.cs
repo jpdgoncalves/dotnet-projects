@@ -32,10 +32,10 @@ namespace HtmlToJs
         {
             Root = parent == null ? this : parent.Root;
             IsRoot = Root == this;
-            ComponentName = IsRoot ? Attributes[COMPONENT_KEY] : Root.ComponentName;
+            ComponentName = IsRoot ? node.Attributes[COMPONENT_KEY] : Root.ComponentName;
             ComponentNameLower = IsRoot ? ComponentName.ToLower() : Root.ComponentNameLower;
-            IsGetter = Attributes.ContainsKey(GETTER_KEY) && Attributes[GETTER_KEY].Length > 0;
-            GetterName = IsGetter ? Attributes[GETTER_KEY] : "";
+            IsGetter = node.Attributes.ContainsKey(GETTER_KEY) && node.Attributes[GETTER_KEY].Length > 0;
+            GetterName = IsGetter ? node.Attributes[GETTER_KEY] : "";
 
             Parent = parent;
             ChildIndex = childIndex;
@@ -93,13 +93,13 @@ namespace HtmlToJs
         private string InternalToString(string indent = "")
         {
             StringBuilder builder = new();
-            builder.Append($"{indent}ComponentTree: Type {Type}, Name {Name}, Parent {(Parent != null ? Parent.Name : null)}\n");
-            builder.Append($"{indent}               ChildIndex {ChildIndex}, Id {Id}, Innertext {InnerText}\n");
+            builder.Append($"{indent}ComponentTree: Type {Type}, Name '{Name}', Parent '{(Parent != null ? Parent.Name : null)}'\n");
+            builder.Append($"{indent}               ChildIndex {ChildIndex}, Id {Id}, Innertext '{InnerText}'\n");
+            builder.Append($"{indent}               IsRoot {IsRoot}, Root '{(IsRoot ? null : Root.Name)}'\n");
+            builder.Append($"{indent}               IsGetter {IsGetter}, Root '{(IsGetter ? GetterName : null)}'\n");
             foreach (var (key, value) in Attributes)
             {
-                builder.Append(indent);
-                builder.Append("  ");
-                builder.Append($"- AttrName {key}, Value: {value}\n");
+                builder.Append($"{indent}               - AttrName {key}, Value: {value}\n");
             }
 
             foreach (var child in Children)

@@ -5,7 +5,7 @@ namespace HtmlToJs
 {
     public class HtmlTree
     {
-        public readonly HtmlTree? Parent;
+        public HtmlTree? Parent { get; private set; }
         public readonly HTMLNodeType Type;
         public readonly string Name = "";
         public readonly string InnerText = "";
@@ -13,9 +13,10 @@ namespace HtmlToJs
         public readonly List<HtmlTree> Children = new();
 
         public HtmlTree(HtmlTree other) : this(
-            other.Type, other.Parent, other.Name, 
+            other.Type, other.Parent, other.Name,
             other.InnerText
-        ) {}
+        )
+        { }
 
         private HtmlTree(
             HTMLNodeType type, HtmlTree? parent = null,
@@ -28,16 +29,33 @@ namespace HtmlToJs
             InnerText = innerText;
         }
 
+        /// <summary>
+        /// Makes a Tag node with the specified name and parent
+        /// </summary>
+        /// <param name="name">The name of the tag</param>
+        /// <param name="parent">The parent of this node if any</param>
         public static HtmlTree MakeTag(string name, HtmlTree? parent = null) => new HtmlTree(
             type: HTMLNodeType.TAG,
             parent: parent,
             name: name
         );
+
         public static HtmlTree MakeText(string innerText, HtmlTree? parent = null) => new HtmlTree(
             type: HTMLNodeType.TEXT,
             parent: parent,
             innerText: innerText
         );
+
+        /// <summary>
+        /// Append a child node to a parent
+        /// </summary>
+        /// <param name="child">The child to append.</param>
+        /// <exception cref="ArgumentException">If the child already has a parent</exception>
+        public void AppendChild(HtmlTree child) {
+            if (child.Parent != null) throw new ArgumentException($"The provided child '{child.Type}:{child.Name}' already has a parent");
+            Children.Add(child);
+            child.Parent = this;
+        }
 
         public HtmlTree? FindClosestAncestorByName(string name)
         {

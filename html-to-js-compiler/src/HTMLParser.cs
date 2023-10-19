@@ -64,6 +64,13 @@ namespace HtmlToJs
                 )
             );
 
+            var doctypeDecl = SequenceOf(
+                Str("<!DOCTYPE"),
+                ZeroOrMore(whitespaceChar),
+                Str("html>"),
+                ZeroOrMore(whitespaceChar)
+            );
+
             var tag = SequenceOf(
                 lowerThanChar,
                 tagName.WithSuccess(walker.WalkTag),
@@ -72,6 +79,7 @@ namespace HtmlToJs
                 ZeroOrMore(slashChar),
                 greaterThanChar
             );
+
             var endTag = SequenceOf(
                 endTagStart,
                 tagName.WithSuccess(walker.WalkEndTag),
@@ -90,6 +98,7 @@ namespace HtmlToJs
 
             parser = ZeroOrMore(FirstOf(
                 comment,
+                doctypeDecl,
                 endTag,
                 tag,
                 text
