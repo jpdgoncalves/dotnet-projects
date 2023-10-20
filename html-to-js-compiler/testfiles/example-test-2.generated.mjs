@@ -1,116 +1,117 @@
 
-export function baseCommands() {
-    let commands = document.createElement("div");
-    commands.setAttribute("class", "commands");
-    commands.setAttribute("data-component-name", "Commands");
+export default function baseCommands() {
+    let Commands = document.createElement("div");
+    Commands.setAttribute("class", "commands");
+    Commands.setAttribute("data-component", "Commands");
 
-    let text3 = document.createTextNode("\r\n    ");
+    let text1 = document.createTextNode("\r\n    ");
 
-    let div4 = document.createElement("div");
-    div4.setAttribute("class", "commands__mode mode");
-    div4.setAttribute("data-side", "top");
+    let div2 = document.createElement("div");
+    div2.setAttribute("class", "commands__mode mode");
+    div2.setAttribute("data-side", "top");
+
+    let text3 = document.createTextNode("\r\n        ");
+
+    let img4 = document.createElement("img");
+    img4.setAttribute("class", "mode__icon");
 
     let text5 = document.createTextNode("\r\n        ");
 
-    let img6 = document.createElement("img");
-    img6.setAttribute("class", "mode__icon");
+    let ul6 = document.createElement("ul");
+    ul6.setAttribute("class", "mode__content");
+    ul6.setAttribute("data-getter", "ModeElement");
 
-    let text7 = document.createTextNode("\r\n        ");
+    let text7 = document.createTextNode("\r\n            ");
 
-    let ul8 = document.createElement("ul");
-    ul8.setAttribute("class", "mode__content");
-    ul8.setAttribute("data-getter", "ModeElement");
+    let li8 = document.createElement("li");
+    li8.setAttribute("class", "mode__option");
+    li8.setAttribute("data-value", "add-mode");
 
-    let text9 = document.createTextNode("\r\n            ");
+    let img9 = document.createElement("img");
+    img9.setAttribute("src", "./icons/plus.svg");
+    img9.setAttribute("alt", "");
+    img9.setAttribute("class", "mode__icon");
 
-    let li10 = document.createElement("li");
-    li10.setAttribute("class", "mode__option");
-    li10.setAttribute("data-value", "add-mode");
+    li8.appendChild(img9);
 
-    let img11 = document.createElement("img");
-    img11.setAttribute("src", "./icons/plus.svg");
-    img11.setAttribute("alt", "");
-    img11.setAttribute("class", "mode__icon");
+    let text10 = document.createTextNode("\r\n            ");
 
-    li10.appendChild(img11);
+    let li11 = document.createElement("li");
+    li11.setAttribute("class", "mode__option");
+    li11.setAttribute("data-value", "edit-mode");
 
-    let text12 = document.createTextNode("\r\n            ");
+    let img12 = document.createElement("img");
+    img12.setAttribute("src", "./icons/pencil.svg");
+    img12.setAttribute("alt", "");
+    img12.setAttribute("class", "mode__icon");
 
-    let li13 = document.createElement("li");
-    li13.setAttribute("class", "mode__option");
-    li13.setAttribute("data-value", "edit-mode");
+    li11.appendChild(img12);
 
-    let img14 = document.createElement("img");
-    img14.setAttribute("src", "./icons/pencil.svg");
-    img14.setAttribute("alt", "");
-    img14.setAttribute("class", "mode__icon");
+    let text13 = document.createTextNode("\r\n        ");
 
-    li13.appendChild(img14);
+    ul6.appendChild(text7);
+    ul6.appendChild(li8);
+    ul6.appendChild(text10);
+    ul6.appendChild(li11);
+    ul6.appendChild(text13);
 
-    let text15 = document.createTextNode("\r\n        ");
+    let text14 = document.createTextNode("\r\n    ");
 
-    ul8.appendChild(text9);
-    ul8.appendChild(li10);
-    ul8.appendChild(text12);
-    ul8.appendChild(li13);
-    ul8.appendChild(text15);
+    div2.appendChild(text3);
+    div2.appendChild(img4);
+    div2.appendChild(text5);
+    div2.appendChild(ul6);
+    div2.appendChild(text14);
 
-    let text16 = document.createTextNode("\r\n    ");
+    let text15 = document.createTextNode("\r\n    ");
 
-    div4.appendChild(text5);
-    div4.appendChild(img6);
-    div4.appendChild(text7);
-    div4.appendChild(ul8);
-    div4.appendChild(text16);
+    let div16 = document.createElement("div");
+    div16.setAttribute("class", "commands__input");
+    div16.setAttribute("contenteditable", "true");
 
     let text17 = document.createTextNode("\r\n    ");
 
     let div18 = document.createElement("div");
-    div18.setAttribute("class", "commands__input");
-    div18.setAttribute("contenteditable", "true");
+    div18.setAttribute("class", "commands__send");
+    div18.setAttribute("data-getter", "SendElement");
 
-    let text19 = document.createTextNode("\r\n    ");
+    let text19 = document.createTextNode("\r\n        ");
 
-    let div20 = document.createElement("div");
-    div20.setAttribute("class", "commands__send");
-    div20.setAttribute("data-getter", "SendElement");
+    let img20 = document.createElement("img");
+    img20.setAttribute("src", "icons/arrow.svg");
 
-    let text21 = document.createTextNode("\r\n        ");
+    let text21 = document.createTextNode("\r\n    ");
 
-    let img22 = document.createElement("img");
-    img22.setAttribute("src", "icons/arrow.svg");
+    div18.appendChild(text19);
+    div18.appendChild(img20);
+    div18.appendChild(text21);
 
-    let text23 = document.createTextNode("\r\n    ");
+    let text22 = document.createTextNode("\r\n");
 
-    div20.appendChild(text21);
-    div20.appendChild(img22);
-    div20.appendChild(text23);
+    Commands.appendChild(text1);
+    Commands.appendChild(div2);
+    Commands.appendChild(text15);
+    Commands.appendChild(div16);
+    Commands.appendChild(text17);
+    Commands.appendChild(div18);
+    Commands.appendChild(text22);
 
-    let text24 = document.createTextNode("\r\n");
-
-    commands.appendChild(text3);
-    commands.appendChild(div4);
-    commands.appendChild(text17);
-    commands.appendChild(div18);
-    commands.appendChild(text19);
-    commands.appendChild(div20);
-    commands.appendChild(text24);
-
-    return commands;
+    return Commands;
 }
 
-export function getModeElement() {
-    return commands.childNodes[1].childNodes[1].childNodes[3];
+export function getModeElement(commands) {
+    return commands.childNodes[1].childNodes[3];
 }
 
-export function getSendElement() {
-    return commands.childNodes[1].childNodes[5];
+export function getSendElement(commands) {
+    return commands.childNodes[5];
 }
 
-export function baseButton() {
-    let button = document.createElement("button");
-    button.setAttribute("data-component-name", "Button");
 
-    return button;
+export default function baseButton() {
+    let Button = document.createElement("button");
+    Button.setAttribute("data-component", "Button");
+
+    return Button;
 }
 

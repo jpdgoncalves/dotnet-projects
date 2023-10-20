@@ -32,7 +32,39 @@ Two kinds of html files can be provided to the program. The first is an html fil
 
 It is possible to define more than one component per file making it possible to put a main and child components in the same file.
 
-The second kind of html file is a properly structured one with a `<!DOCTYPE html>` declaration at the top and the structure declared inside the `<html>` tag. Here is an example:
+By running the executable as `html-to-js-compiler.exe <filename>.html` it will produce a `<filename>.generated.js` with the following functions (example is the result of the previous example).
+
+```js
+export default function baseCommands() {
+    /* 
+    Generated code that creates a copy of the defined
+    structure of the component "Commands"
+    */
+}
+
+export function getModeElement(commands) {
+    /*
+    Generated code that returns the element with
+    the attribute data-getter="ModeElement"
+    */
+}
+
+export function getSendElement(commands) {
+    /*
+    Generated code that returns the element with
+    the attribute data-getter="SendElement"
+    */
+}
+
+export default function baseButton() {
+    /* 
+    Generated code that creates a copy of the defined
+    structure of the component "Button"
+    */
+}
+```
+
+The second kind of html file that can be provided is a properly structured one with a `<!DOCTYPE html>` declaration at the top and the structure declared inside the `<html>` tag. Here is an example:
 
 ```html
 <!DOCTYPE html>
@@ -67,3 +99,5 @@ The second kind of html file is a properly structured one with a `<!DOCTYPE html
 
 </html>
 ```
+
+To generate a component from this kind of file run the executable as `html-to-js-compiler.exe --dom-mode <filename>.html`. In this case it will generated the same output expected in the previous example.
