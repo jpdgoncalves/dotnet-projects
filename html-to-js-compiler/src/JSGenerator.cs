@@ -13,7 +13,7 @@ namespace HtmlToJs
             StringBuilder code = new();
 
             code.AppendLine();
-            code.AppendLine($"export function base{node.ComponentName}() {{");
+            code.AppendLine($"export default function base{node.ComponentName}() {{");
             GenerateFuncBody(node, code);
             code.AppendLine("}\n");
             GenerateGetterFuncs(node, code);
