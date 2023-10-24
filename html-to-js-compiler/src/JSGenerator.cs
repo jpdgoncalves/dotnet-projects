@@ -7,6 +7,43 @@ namespace HtmlToJs
 
     public static class JsGenerator
     {
+        public static void GenerateComponents(string inFilePath, string outFilePath)
+        {
+            var parser = new HtmlParser();
+            var htmlRoot = parser.Parse(inFilePath);
+            var components = htmlRoot.Children.FindAll(ComponentTree.HasComponentName);
+
+            using (var sw = new StreamWriter(outFilePath))
+            {
+                foreach (var component in components)
+                {
+                    var tree = ComponentTree.Make(component);
+                    sw.Write(GenerateComponent(tree));
+                }
+            }
+        }
+
+        public static void GenerateComponentsFromDom(string inFilePath, string outFilePath) {
+            var parser = new HtmlParser();
+            var root = parser.Parse(inFilePath);
+            
+            var html = root.Children.Find(e => e.Type == HTMLNodeType.TAG && e.Name.Equals("html"));
+            if (html == null) throw new Exception($"{inFilePath} is not properly formated. It should be an <html> tag with a <body> tag inside");
+
+            var body = html.Children.Find(e => e.Type == HTMLNodeType.TAG && e.Name.Equals("body"));
+            if (body == null) throw new Exception($"{inFilePath} is not properly formated. It should be an <html> tag with a <body> tag inside");
+
+            var components = body.Children.FindAll(ComponentTree.HasComponentName);
+
+            using (var sw = new StreamWriter(outFilePath))
+            {
+                foreach (var component in components)
+                {
+                    var tree = ComponentTree.Make(component);
+                    sw.Write(GenerateComponent(tree));
+                }
+            }
+        }
 
         private static string GenerateComponent(ComponentTree node)
         {
@@ -74,44 +111,6 @@ namespace HtmlToJs
             }
 
             foreach (var child in node.Children) GenerateGetterFuncs(child, code);
-        }
-
-        public static void GenerateComponents(string inFilePath, string outFilePath)
-        {
-            var parser = new HtmlParser();
-            var htmlRoot = parser.Parse(inFilePath);
-            var components = htmlRoot.Children.FindAll(ComponentTree.HasComponentName);
-
-            using (var sw = new StreamWriter(outFilePath))
-            {
-                foreach (var component in components)
-                {
-                    var tree = ComponentTree.Make(component);
-                    sw.Write(GenerateComponent(tree));
-                }
-            }
-        }
-
-        public static void GenerateComponentsFromDom(string inFilePath, string outFilePath) {
-            var parser = new HtmlParser();
-            var root = parser.Parse(inFilePath);
-            
-            var html = root.Children.Find(e => e.Type == HTMLNodeType.TAG && e.Name.Equals("html"));
-            if (html == null) throw new Exception($"{inFilePath} is not properly formated. It should be an <html> tag with a <body> tag inside");
-
-            var body = html.Children.Find(e => e.Type == HTMLNodeType.TAG && e.Name.Equals("body"));
-            if (body == null) throw new Exception($"{inFilePath} is not properly formated. It should be an <html> tag with a <body> tag inside");
-
-            var components = body.Children.FindAll(ComponentTree.HasComponentName);
-
-            using (var sw = new StreamWriter(outFilePath))
-            {
-                foreach (var component in components)
-                {
-                    var tree = ComponentTree.Make(component);
-                    sw.Write(GenerateComponent(tree));
-                }
-            }
         }
 
         private static string ToLiteral(string input)
