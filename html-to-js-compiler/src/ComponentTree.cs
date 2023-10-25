@@ -1,5 +1,6 @@
 
 using System.Text;
+using System.Text.RegularExpressions;
 using static HtmlToJs.HtmlTree;
 
 namespace HtmlToJs
@@ -9,11 +10,16 @@ namespace HtmlToJs
         private static int _nextId = 0;
         private static readonly string COMPONENT_KEY = "data-component";
         private static readonly string GETTER_KEY = "data-getter";
+        /// <summary>
+        /// Matches expressions like Hello, Hello() and Hello(arg1, arg2)
+        /// </summary>
+        private static readonly Regex COMP_DATA_REGEX = new(@"([^\(]+)(?:\(([^\)]*)\))?");
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
         public readonly string ComponentName;
         public readonly string ComponentNameLower;
+        public readonly HashSet<string> ComponentArguments;
         public readonly bool IsGetter;
         public readonly string GetterName;
         public readonly ComponentTree? Parent;
@@ -32,8 +38,23 @@ namespace HtmlToJs
         {
             Root = parent == null ? this : parent.Root;
             IsRoot = Root == this;
-            ComponentName = IsRoot ? node.Attributes[COMPONENT_KEY] : Root.ComponentName;
-            ComponentNameLower = IsRoot ? ComponentName.ToLower() : Root.ComponentNameLower;
+
+            if (IsRoot) {
+                var groups = COMP_DATA_REGEX.Match(node.Attributes[COMPONENT_KEY]).Groups;
+                ComponentName = groups[1].Value.Trim();
+                ComponentNameLower = ComponentName.ToLower();
+                ComponentArguments = new();
+                if (groups.Count > 2) {
+                    foreach (var arg in groups[2].Value.Split(",")) {
+                        ComponentArguments.Add(arg.Trim());
+                    }
+                }
+            } else {
+                ComponentName = Root.ComponentName;
+                ComponentNameLower = Root.ComponentNameLower;
+                ComponentArguments = Root.ComponentArguments;
+            }
+            
             IsGetter = node.Attributes.ContainsKey(GETTER_KEY) && node.Attributes[GETTER_KEY].Length > 0;
             GetterName = IsGetter ? node.Attributes[GETTER_KEY] : "";
 
@@ -96,6 +117,7 @@ namespace HtmlToJs
             builder.Append($"{indent}ComponentTree: Type {Type}, Name '{Name}', Parent '{(Parent != null ? Parent.Name : null)}'\n");
             builder.Append($"{indent}               ChildIndex {ChildIndex}, Id {Id}, Innertext '{InnerText}'\n");
             builder.Append($"{indent}               IsRoot {IsRoot}, Root '{(IsRoot ? null : Root.Name)}'\n");
+            builder.Append($"{indent}               ComponentName {ComponentName}, ArgsCount {ComponentArguments.Count}\n");
             builder.Append($"{indent}               IsGetter {IsGetter}, Root '{(IsGetter ? GetterName : null)}'\n");
             foreach (var (key, value) in Attributes)
             {
