@@ -50,7 +50,7 @@ namespace HtmlToJs
             StringBuilder code = new();
 
             code.AppendLine();
-            code.AppendLine($"export default function base{node.ComponentName}() {{");
+            code.AppendLine($"export default function base{node.ComponentNameCamel}() {{");
             GenerateFuncBody(node, code);
             code.AppendLine("}\n");
             GenerateGetterFuncs(node, code);
@@ -60,7 +60,7 @@ namespace HtmlToJs
 
         private static void GenerateFuncBody(ComponentTree node, StringBuilder code)
         {
-            var vName = node == node.Root ? node.ComponentName : node.Id;
+            var vName = node == node.Root ? node.ComponentNameCamel : node.Id;
 
             if (node.Type == HTMLNodeType.TAG)
             {

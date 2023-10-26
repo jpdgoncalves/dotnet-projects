@@ -1,6 +1,5 @@
 
 using System.Text;
-using System.Text.RegularExpressions;
 using static HtmlToJs.HtmlTree;
 
 namespace HtmlToJs
@@ -8,16 +7,13 @@ namespace HtmlToJs
     public class ComponentTree
     {
         private static int _nextId = 0;
-        private static readonly string COMPONENT_KEY = "data-component";
         private static readonly string GETTER_KEY = "data-getter";
-        /// <summary>
-        /// Matches expressions like Hello, Hello() and Hello(arg1, arg2)
-        /// </summary>
-        private static readonly Regex COMP_DATA_REGEX = new(@"([^\(]+)(?:\(([^\)]*)\))?");
+        private readonly List<ComponentTree> _children = new();
 
         public readonly ComponentTree Root;
         public readonly bool IsRoot;
         public readonly string ComponentName;
+        public readonly string ComponentNameCamel;
         public readonly string ComponentNameLower;
         public readonly HashSet<string> ComponentArguments;
         public readonly bool IsGetter;
@@ -29,7 +25,12 @@ namespace HtmlToJs
         public readonly string Id;
         public readonly string InnerText;
         public readonly Dictionary<string, string> Attributes = new();
-        public readonly List<ComponentTree> Children = new();
+
+        public IReadOnlyList<ComponentTree> Children {
+            get {
+                return _children;
+            }
+        }
 
         private ComponentTree(
             HtmlTree node, ComponentTree? parent,
@@ -40,17 +41,13 @@ namespace HtmlToJs
             IsRoot = Root == this;
 
             if (IsRoot) {
-                var groups = COMP_DATA_REGEX.Match(node.Attributes[COMPONENT_KEY]).Groups;
-                ComponentName = groups[1].Value.Trim();
-                ComponentNameLower = ComponentName.ToLower();
-                ComponentArguments = new();
-                if (groups.Count > 2) {
-                    foreach (var arg in groups[2].Value.Split(",")) {
-                        ComponentArguments.Add(arg.Trim());
-                    }
-                }
+                ComponentName = node.Name;
+                ComponentNameCamel = string.Join("", node.Name.Split('-').Select(UpperFirst));
+                ComponentNameLower = ComponentNameCamel.ToLower();
+                ComponentArguments = new(node.Attributes.Keys);
             } else {
                 ComponentName = Root.ComponentName;
+                ComponentNameCamel = Root.ComponentName;
                 ComponentNameLower = Root.ComponentNameLower;
                 ComponentArguments = Root.ComponentArguments;
             }
@@ -76,13 +73,20 @@ namespace HtmlToJs
 
         public static bool HasComponentName(HtmlTree html)
         {
-            return html.Attributes.ContainsKey(COMPONENT_KEY) && html.Attributes[COMPONENT_KEY].Length > 0;
+            var idx = html.Name.IndexOf('-');
+            return idx > 0 && idx < html.Name.Length - 1;
+        }
+
+        private static string UpperFirst(string str) {
+            if (str.Length == 0) return str;
+            if (str.Length == 1) return str.ToUpper();
+            return char.ToUpper(str[0]) + str.Substring(1);
         }
 
         public static ComponentTree Make(HtmlTree root)
         {
             if (!HasComponentName(root))
-                throw new ArgumentException($"Provided HtmlTree root doesn't have a non empty '{COMPONENT_KEY}' attribute");
+                throw new ArgumentException($"Provided HtmlTree root doesn't have a valid name.\n It should have at least one letter followed by a dash followed by at least another letter");
 
             return MakeInternal(root);
         }
@@ -100,7 +104,7 @@ namespace HtmlToJs
             var childrenCount = children.Count;
             for (var i = 0; i < childrenCount; i++)
             {
-                component.Children.Add(MakeInternal(children[i], component, i));
+                component._children.Add(MakeInternal(children[i], component, i));
             }
 
             return component;
@@ -124,7 +128,7 @@ namespace HtmlToJs
                 builder.Append($"{indent}               - AttrName {key}, Value: {value}\n");
             }
 
-            foreach (var child in Children)
+            foreach (var child in _children)
             {
                 builder.Append(child.InternalToString(indent + "  "));
             }
