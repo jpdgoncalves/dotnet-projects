@@ -6,28 +6,34 @@ var app = builder.Build();
 string ROOT_FOLDER = Path.GetFullPath("root_folder");
 string NOTES_FOLDER = Path.Join(ROOT_FOLDER, "notes");
 
+var notesGroup = app.MapGroup("/notes");
+notesGroup.AddEndpointFilter(Validators.ValidateNotename);
 
-app.MapGet("/notes", () => {
+notesGroup.MapGet("", () =>
+{
     var notes = Directory.EnumerateFiles(NOTES_FOLDER).Select(
         e => Path.GetFileNameWithoutExtension(e)
     ).ToList();
     return notes;
 });
 
-app.MapGet("/notes/{notename}", (string notename) => {
+notesGroup.MapGet("/{notename}", ([FromRoute(Name = "notename")] string notename) =>
+{
     var notepath = Path.Join(NOTES_FOLDER, notename + ".txt");
     if (!File.Exists(notepath)) return Results.NotFound($"Note '{notename}' doesn't exist");
     return Results.Text(File.ReadAllText(notepath));
 });
 
-app.MapPost("/notes/{notename}", (string notename) => {
+notesGroup.MapPost("/{notename}", ([FromRoute(Name = "notename")] string notename) =>
+{
     var notepath = Path.Join(NOTES_FOLDER, notename + ".txt");
     if (File.Exists(notepath)) return Results.BadRequest($"Note '{notename}' already exists");
     File.Create(notepath);
-    return Results.Created($"/notes/{notename}", $"Created note '{notename}'");
+    return Results.Created($"/{notename}", $"Created note '{notename}'");
 });
 
-app.MapPut("/notes/{notename}", async (string notename, [FromBody] Stream body) => {
+notesGroup.MapPut("/{notename}", async ([FromRoute(Name = "notename")] string notename, [FromBody] Stream body) =>
+{
     var reader = new StreamReader(body);
     var text = await reader.ReadToEndAsync();
     reader.Close();
@@ -38,7 +44,8 @@ app.MapPut("/notes/{notename}", async (string notename, [FromBody] Stream body) 
     return Results.Text($"Updated note '{notename}'");
 });
 
-app.MapDelete("/notes/{notename}", (string notename) => {
+notesGroup.MapDelete("/{notename}", ([FromRoute(Name = "notename")] string notename) =>
+{
     var notepath = Path.Join(NOTES_FOLDER, notename + ".txt");
     if (!File.Exists(notepath)) return Results.NotFound($"Note '{notename}' doesn't exist");
     File.Delete(notepath);
