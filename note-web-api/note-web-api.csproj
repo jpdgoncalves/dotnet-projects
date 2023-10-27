@@ -7,4 +7,7 @@
     <RootNamespace>note_web_api</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <None Include="root_folder\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="config\s"/>
+  </ItemGroup>
 </Project>
