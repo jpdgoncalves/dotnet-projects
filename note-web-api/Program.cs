@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
 string ROOT_FOLDER = Path.GetFullPath("root_folder");
 string NOTES_FOLDER = Path.Join(ROOT_FOLDER, "notes");
 
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.Use(CustomMiddleware.CheckPassword);
+
 var notesGroup = app.MapGroup("/notes");
-notesGroup.AddEndpointFilter(Validators.ValidateNotename);
+notesGroup.AddEndpointFilter(CustomMiddleware.ValidateNotename);
 
 notesGroup.MapGet("", () =>
 {
