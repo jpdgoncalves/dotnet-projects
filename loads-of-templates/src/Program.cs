@@ -1,14 +1,10 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿
+using TemplateBuilder;
+
+// See https://aka.ms/new-console-template for more information
 Console.WriteLine("Hello, World!");
 
-public class TemplateBuilder {
-    
-}
-
-public class DirectoryBuilder {
-
-}
-
-public class FileBuilder {
-
-}
+var p = 1;
+var t = $"""
+This is something {p}
+""";
