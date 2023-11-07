@@ -14,7 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="src/**/*.cs"/>
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 
 </Project>
