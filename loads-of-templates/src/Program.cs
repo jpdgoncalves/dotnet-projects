@@ -1,10 +1,20 @@
 ﻿
-using TemplateBuilder;
+using System.CommandLine;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+using LoadsOfTemplates.Templates;
 
-var p = 1;
-var t = $"""
-This is something {p}
-""";
+namespace LoadsOfTemplates {
+    public static class Program {
+        
+        public static int Main(string[] args) {
+
+            var rootCommand = new RootCommand(
+                "Command to create projects and project parts (like components in a website) from templates"
+            );
+
+            Jpdg.RegisterCommands(rootCommand);
+
+            return rootCommand.Invoke(args);
+        }
+    }
+}
