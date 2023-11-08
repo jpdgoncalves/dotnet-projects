@@ -1,7 +1,7 @@
 
 using System.Text;
 
-namespace TemplateBuilder.Core {
+namespace LoadsOfTemplates.Core {
 
     public class TemplateBuilder : IDirectoryBuilder, IBuilder
     {
