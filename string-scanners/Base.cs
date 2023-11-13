@@ -1,6 +1,8 @@
 
 using System.Text.RegularExpressions;
 
+using static StringScanners.Scanners;
+
 namespace StringScanners
 {
     public static class CharSets
@@ -263,7 +265,7 @@ namespace StringScanners
         public static CharScanner AsciiLetters = Of(CharSets.AsciiLetters);
         public static CharScanner AsciiLettersDigits = Of(CharSets.AsciiLettersDigits);
 
-        public static implicit operator Scanners.ScanFunction(CharScanner scanner)
+        public static implicit operator ScanFunction(CharScanner scanner)
         {
             return (string source, int start) =>
             {

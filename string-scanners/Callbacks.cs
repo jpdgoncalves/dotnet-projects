@@ -1,6 +1,5 @@
 
 using static StringScanners.Scanners;
-using static StringScanners.ScannerCallbacks;
 
 namespace StringScanners
 {
