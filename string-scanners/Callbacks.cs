@@ -3,11 +3,20 @@ using static StringScanners.Scanners;
 
 namespace StringScanners
 {
+    /// <summary>
+    /// Class used to handle callback functionality
+    /// </summary>
     public class ScannerCallbacks {
         public delegate void ScanFunctionCallback(string source, int start, int offset);
 
         private ScanFunction _scanFunction;
+        /// <summary>
+        /// Callback invoked when the scan function is successful
+        /// </summary>
         public ScanFunctionCallback? OnSuccess;
+        /// <summary>
+        /// Callback invoked when the scan function is not successful
+        /// </summary>
         public ScanFunctionCallback? OnFailure;
 
         public ScannerCallbacks(ScanFunction scanFunction) {
