@@ -259,10 +259,26 @@ namespace StringScanners
         /// A CharScanner that accepts characters from a to z (lowercase)
         /// </summary>
         public static CharScanner AsciiLowerLetters = Of(CharSets.AsciiLowerLetters);
+        /// <summary>
+        /// A CharScanner that accepts characters from A to Z (uppercase)
+        /// </summary>
         public static CharScanner AsciiUpperLetters = Of(CharSets.AsciiUpperLetters);
+        /// <summary>
+        /// A CharScanner that accepts characters from 0 to 9
+        /// </summary>
         public static CharScanner AsciiDigits = Of(CharSets.AsciiDigits);
+        /// <summary>
+        /// A CharScanner that accepts whitespace characters
+        /// </summary>
         public static CharScanner AsciiWhitespaces = Of(CharSets.AsciiWhitespaces);
+        /// <summary>
+        /// A CharScanner that accepts character from a to z (upper and lowercase)
+        /// </summary>
         public static CharScanner AsciiLetters = Of(CharSets.AsciiLetters);
+        /// <summary>
+        /// A CharScanner that accepts character from a to z (upper and lowercase) and
+        /// 0 to 9
+        /// </summary>
         public static CharScanner AsciiLettersDigits = Of(CharSets.AsciiLettersDigits);
 
         public static implicit operator ScanFunction(CharScanner scanner)
