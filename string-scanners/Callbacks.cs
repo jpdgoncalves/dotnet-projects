@@ -1,7 +1,6 @@
 
 namespace StringScanners
 {
-
     public static partial class Scanners
     {
         public delegate void ScanFunctionCallback(string source, int start, int offset);
