@@ -1,0 +1,20 @@
+{
+    "Name": "Lofte Simple Website",
+    "Description": "A simple test template that creates a website",
+    "Params": [
+        {
+            "Name": "Web Page Name",
+            "Description": "Name of the webpage",
+            "Required": true
+        },
+        {
+            "Name": "Web Page Title",
+            "Description": "Tile of the webpage"
+        },
+        {
+            "Name": "Index File Name",
+            "Description": "Name of the index file",
+            "Default": "index"
+        }
+    ]
+}
