@@ -23,23 +23,23 @@ namespace LoadOfTemplates {
                 
                 foreach (var file in files) {
                     var destPath = Path.Combine(destination, file.Replace(_location, ""));
-                    CreateFile(srcPath: file, destPath);
+                    CreateFile(srcPath: file, destPath, paramValues);
                 }
 
                 foreach (var dir in subDirectories) {
                     var destPath = Path.Combine(destination, dir.Replace(_location, ""));
-                    CreateDirectory(srcPath: dir, destPath);
+                    CreateDirectory(srcPath: dir, destPath, paramValues);
                     remaining.Push(dir);
                 }
             }
         }
 
-        private void CreateFile(string srcPath, string destPath)
+        private void CreateFile(string srcPath, string destPath, Dictionary<string, string> paramValues)
         {
             throw new NotImplementedException();
         }
 
-        private void CreateDirectory(string srcPath, string destPath)
+        private void CreateDirectory(string srcPath, string destPath, Dictionary<string, string> paramValues)
         {
             throw new NotImplementedException();
         }
