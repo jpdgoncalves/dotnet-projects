@@ -20,9 +20,14 @@ namespace LoadOfTemplates
                 name: "Template Name",
                 description: "Name of the template to use"
             );
+            Argument<string> destArgument = new(
+                name: "Destination",
+                description: "Destination of the instance"
+            );
 
             newCommand.AddArgument(templateArgument);
-            newCommand.SetHandler(CommandHandlers.NewCommandHandler, templateArgument);
+            newCommand.AddArgument(destArgument);
+            newCommand.SetHandler(CommandHandlers.NewCommandHandler, templateArgument, destArgument);
             rootCommand.AddCommand(newCommand);
         }
 
@@ -48,7 +53,7 @@ namespace LoadOfTemplates
 
     public static class CommandHandlers {
 
-        public static void NewCommandHandler(string templateName) {
+        public static void NewCommandHandler(string templateName, string destination) {
             Console.WriteLine("new is not implemented yet!");
         }
 
