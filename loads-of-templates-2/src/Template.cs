@@ -1,8 +1,11 @@
 
+using System.Text.RegularExpressions;
 
 namespace LoadOfTemplates {
 
     public class Template {
+        private static Regex _TEMPLATE_REGEX = new Regex("{{(.*?)}}");
+
         private string _location;
         private TemplateProperties _properties;
 
@@ -28,7 +31,7 @@ namespace LoadOfTemplates {
 
                 foreach (var dir in subDirectories) {
                     var destPath = Path.Combine(destination, dir.Replace(_location, ""));
-                    CreateDirectory(srcPath: dir, destPath, paramValues);
+                    CreateDirectory(destPath, paramValues);
                     remaining.Push(dir);
                 }
             }
@@ -36,17 +39,52 @@ namespace LoadOfTemplates {
 
         private void CreateFile(string srcPath, string destPath, Dictionary<string, string> paramValues)
         {
-            throw new NotImplementedException();
+            string template = File.ReadAllText(srcPath);
+            destPath = EvaluateTemplateString(destPath, paramValues);
+            using (var sw = new StreamWriter(destPath)) {
+                sw.Write(EvaluateTemplateString(template, paramValues));
+            }
         }
 
-        private void CreateDirectory(string srcPath, string destPath, Dictionary<string, string> paramValues)
+        private void CreateDirectory(string destPath, Dictionary<string, string> paramValues)
         {
-            throw new NotImplementedException();
+            Directory.CreateDirectory(EvaluateTemplateString(destPath, paramValues));
         }
 
         private Dictionary<string, string> GetUserInput(TemplateProperties properties)
         {
-            throw new NotImplementedException();
+            Dictionary<string, string> paramValues = new();
+
+            var i = 0;
+            var paramList = properties.Params;
+            while (i < paramList.Count) {
+                var param = paramList[i];
+                Console.Write($"\n {param.Name}");
+                if (param.Required) Console.Write($" (required): ");
+                else Console.Write($" (default: '{param.Default}'): ");
+
+                var value = Console.ReadLine();
+                if (param.Required && (value is null || value.Length == 0)) {
+                    Console.WriteLine($"Parameter {param.Name} is required. It can't be an empty value");
+                    continue;
+                }
+
+                if (value is null || value.Length == 0) {
+                    value = param.Default;
+                }
+
+                paramValues.Add(param.Name, value);
+                i++;
+            }
+
+            return paramValues;
+        }
+
+        private string EvaluateTemplateString(string template, Dictionary<string, string> paramValues) {
+            return _TEMPLATE_REGEX.Replace(template, (match) => {
+                var prop = match.Groups[1].Value.Trim();
+                return paramValues.ContainsKey(prop) ? paramValues[prop] : "<ERROR>";
+            });
         }
     }
 }
