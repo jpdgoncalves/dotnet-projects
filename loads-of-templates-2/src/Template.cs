@@ -59,16 +59,25 @@ namespace LoadOfTemplates {
             var paramList = properties.Params;
             while (i < paramList.Count) {
                 var param = paramList[i];
+
+                // Ask the user for the input of the specified parameter.
                 Console.Write($"\n {param.Name}");
                 if (param.Required) Console.Write($" (required): ");
                 else Console.Write($" (default: '{param.Default}'): ");
 
+                // Read the input
                 var value = Console.ReadLine();
+                // If the parameter is required but no value was read or an empty value was read
+                // then warn the user and ask for the parameter again.
                 if (param.Required && (value is null || value.Length == 0)) {
                     Console.WriteLine($"Parameter {param.Name} is required. It can't be an empty value");
                     continue;
                 }
 
+                // At this point the only way the parameter doesn't have a value
+                // is if it wasn't required or the user provide a value.
+                // We test if we have a value and if we don't, we use
+                // the default one.
                 if (value is null || value.Length == 0) {
                     value = param.Default;
                 }
