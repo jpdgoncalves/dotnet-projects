@@ -1,1 +1,1 @@
-console.log("Hello {Web Page Title}");
+console.log("Hello {{Web Page Title}}");
