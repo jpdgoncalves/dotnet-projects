@@ -5,13 +5,14 @@ namespace LoadOfTemplates {
 
     public class Template {
         private static Regex _TEMPLATE_REGEX = new Regex("{{(.*?)}}");
+        private static string _TEMPLATE_JSON_FILE = "template.json";
 
         private string _location;
         public readonly TemplateProperties Properties;
 
         public Template(string location) {
             _location = Path.GetFullPath(location);
-            Properties = TemplateProperties.ReadTemplateFile(Path.Combine(location, "template.json"));
+            Properties = TemplateProperties.ReadTemplateFile(Path.Combine(location, _TEMPLATE_JSON_FILE));
         }
 
         public static IEnumerable<Template> ReadAllTemplates(string templateDir) {
@@ -24,19 +25,19 @@ namespace LoadOfTemplates {
             Stack<string> remaining = new();
             remaining.Push(_location);
             while (remaining.Count > 0) {
-                remaining.Pop();
-                var subDirectories = Directory.GetDirectories(_location);
-                var files = Directory.GetFiles(_location).ToList().FindAll(
-                    f => !Path.GetFileName(f).Equals("templates.json")
+                var curDir = remaining.Pop();
+                var subDirectories = Directory.GetDirectories(curDir);
+                var files = Directory.GetFiles(curDir).ToList().FindAll(
+                    f => !Path.GetFileName(f).Equals(_TEMPLATE_JSON_FILE)
                 );
                 
                 foreach (var file in files) {
-                    var destPath = Path.Combine(destination, file.Replace(_location, ""));
+                    var destPath = Path.Combine(destination, file.Replace(_location + "\\", ""));
                     CreateFile(srcPath: file, destPath, paramValues);
                 }
 
                 foreach (var dir in subDirectories) {
-                    var destPath = Path.Combine(destination, dir.Replace(_location, ""));
+                    var destPath = Path.Combine(destination, dir.Replace(_location + "\\", ""));
                     CreateDirectory(destPath, paramValues);
                     remaining.Push(dir);
                 }

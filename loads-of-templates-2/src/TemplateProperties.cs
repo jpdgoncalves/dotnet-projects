@@ -4,12 +4,13 @@ using System.Text.Json;
 namespace LoadOfTemplates {
 
     public class TemplateProperties {
-        public required string Name;
-        public required string Description;
-        public List<TemplateParam> Params = new();
+        public required string Name {get; set;}
+        public required string Description {get; set;}
+        public List<TemplateParam> Params {get; set;} = new();
 
         public static TemplateProperties ReadTemplateFile(string path) {
-            var properties = JsonSerializer.Deserialize<TemplateProperties>(File.ReadAllText(path));
+            var text = File.ReadAllText(path);
+            var properties = JsonSerializer.Deserialize<TemplateProperties>(text);
             if (properties is null) throw new Exception($"Unable to parse '{path}'!");
             
             // Used to check for repeated parameters
@@ -24,9 +25,9 @@ namespace LoadOfTemplates {
     }
 
     public class TemplateParam {
-        public required string Name;
-        public required string Description;
-        public bool Required = false;
-        public string Default = "";
+        public required string Name {get; set;}
+        public required string Description {get; set;}
+        public bool Required {get; set;} = false;
+        public string Default {get; set;} = "";
     }
 }
