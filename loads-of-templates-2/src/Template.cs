@@ -7,22 +7,28 @@ namespace LoadOfTemplates {
         private static Regex _TEMPLATE_REGEX = new Regex("{{(.*?)}}");
 
         private string _location;
-        private TemplateProperties _properties;
+        public readonly TemplateProperties Properties;
 
         public Template(string location) {
             _location = Path.GetFullPath(location);
-            _properties = TemplateProperties.ReadTemplateFile(Path.Combine(location, "template.json"));
+            Properties = TemplateProperties.ReadTemplateFile(Path.Combine(location, "template.json"));
+        }
+
+        public static IEnumerable<Template> ReadAllTemplates(string templateDir) {
+            return Directory.EnumerateDirectories(templateDir).Select((path) => new Template(path));
         }
 
         public void CreateInstance(string destination) {
-            Dictionary<string, string> paramValues = GetUserInput(_properties);
+            Dictionary<string, string> paramValues = GetUserInput(Properties);
 
             Stack<string> remaining = new();
             remaining.Push(_location);
             while (remaining.Count > 0) {
                 remaining.Pop();
                 var subDirectories = Directory.GetDirectories(_location);
-                var files = Directory.GetFiles(_location);
+                var files = Directory.GetFiles(_location).ToList().FindAll(
+                    f => !Path.GetFileName(f).Equals("templates.json")
+                );
                 
                 foreach (var file in files) {
                     var destPath = Path.Combine(destination, file.Replace(_location, ""));
