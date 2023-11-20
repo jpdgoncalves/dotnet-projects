@@ -1,9 +1,11 @@
 ﻿
 using System.CommandLine;
+using System.Text;
 
 namespace LoadOfTemplates
 {
     public static class Program {
+
         public static int Main(string[] args) {
             RootCommand rootCommand = new RootCommand("Create projects and their components from one of the several templates available");
 
@@ -52,17 +54,58 @@ namespace LoadOfTemplates
     }
 
     public static class CommandHandlers {
+        private static readonly string _TEMPLATES_DIRECTORY = Path.Join(AppContext.BaseDirectory, "templates");
 
         public static void NewCommandHandler(string templateName, string destination) {
-            Console.WriteLine("new is not implemented yet!");
+            var templates = Template.ReadAllTemplates(_TEMPLATES_DIRECTORY);
+            Template targetTemplate;
+            try {
+                targetTemplate = templates.First((t) => t.Properties.Name.Equals(templateName));
+            } catch {
+                Console.WriteLine($"""
+                Template '{templateName}' doesn't seem to exist.
+                If it does make sure the 'Name' field in the template.json is the exact
+                same as the provided.
+                """);
+                return;
+            }
+
+            targetTemplate.CreateInstance(destination);
         }
 
         public static void HelpCommandHandler(string templateName) {
-            Console.WriteLine("help is not implemented yet!");
+            var templates = Template.ReadAllTemplates(_TEMPLATES_DIRECTORY);
+            Template targetTemplate;
+            try {
+                targetTemplate = templates.First((t) => t.Properties.Name.Equals(templateName));
+            } catch {
+                Console.WriteLine($"""
+                Template '{templateName}' doesn't seem to exist.
+                If it does make sure the 'Name' field in the template.json is the exact
+                same as the provided.
+                """);
+                return;
+            }
+
+            Console.WriteLine($"\nTemplate: {targetTemplate.Properties.Name}");
+            Console.WriteLine($"Description: {targetTemplate.Properties.Description}");
+            Console.WriteLine("Parameters:");
+            
+            foreach (var param in targetTemplate.Properties.Params) {
+                Console.WriteLine($"\n- {param.Name} ({(param.Required ? "required" : "optional")})");
+                if (!param.Required) Console.WriteLine($"  Default Value: '{param.Default}'");
+                Console.WriteLine($"  Description: {param.Description}");
+            }
         }
 
         public static void ListCommandHandler() {
-            Console.WriteLine("list is not implemented yet!");
+            var templates = Template.ReadAllTemplates(_TEMPLATES_DIRECTORY);
+
+            Console.WriteLine("List of Available Templates");
+
+            foreach (var template in templates) {
+                Console.WriteLine($"{template.Properties.Name}: {template.Properties.Description}");
+            }
         }
     }
 }
