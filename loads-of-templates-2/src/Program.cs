@@ -13,6 +13,11 @@ namespace LoadOfTemplates
             RegisterHelpCommand(rootCommand);
             RegisterListCommand(rootCommand);
 
+            // TODO: Use CommandLineBuilder to setup my own custom exception
+            // handling routine.
+            // Currently we are just printing the exceptions but it would
+            // be better to print more helpful messages.
+
             return rootCommand.Invoke(args);
         }
 
