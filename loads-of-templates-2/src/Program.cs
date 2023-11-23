@@ -61,12 +61,8 @@ namespace LoadOfTemplates
             Template targetTemplate;
             try {
                 targetTemplate = templates.First((t) => t.Properties.Name.Equals(templateName));
-            } catch {
-                Console.WriteLine($"""
-                Template '{templateName}' doesn't seem to exist.
-                If it does make sure the 'Name' field in the template.json is the exact
-                same as the provided.
-                """);
+            } catch (Exception e) {
+                Console.Error.WriteLine(e);
                 return;
             }
 
@@ -78,12 +74,8 @@ namespace LoadOfTemplates
             Template targetTemplate;
             try {
                 targetTemplate = templates.First((t) => t.Properties.Name.Equals(templateName));
-            } catch {
-                Console.WriteLine($"""
-                Template '{templateName}' doesn't seem to exist.
-                If it does make sure the 'Name' field in the template.json is the exact
-                same as the provided.
-                """);
+            } catch (Exception e) {
+                Console.Error.WriteLine(e);
                 return;
             }
 
